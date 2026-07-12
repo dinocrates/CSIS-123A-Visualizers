@@ -3,27 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CSIS 123A Visualizers — Program Manager</title>
+<title>CSIS 123A Visualizers</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --win-bg:     #008080;
-    --win-face:   #c0c0c0;
-    --win-dark:   #808080;
-    --win-darker: #404040;
-    --win-black:  #000000;
-    --win-white:  #ffffff;
-    --win-blue:   #000080;
-    --code-bg:    #2b2b2b;
-    --code-text:  #f8f8f2;
+    --ink:         #5b4964;
+    --ink-soft:    #907e9c;
+    --line:        #e3cce4;
+    --line-strong: #c9a6cc;
+    --paper:       #fffdf9;
+    --face:        #fdf4f8;
+    --pink:        #f9c7da;
+    --pink-deep:   #e2799f;
+    --lavender:    #b7a6ea;
+    --blue:        #8fb3f0;
+    --mint:        #93dcb2;
+    --butter:      #ffd98e;
+    --code-bg:     #352c47;
+    --code-text:   #f4eefc;
+    --ui:   'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+    --mono: 'Courier New', Courier, monospace;
   }
 
   body {
-    font-family: 'Courier New', Courier, monospace;
-    background: var(--win-bg);
+    font-family: var(--ui);
+    color: var(--ink);
+    background-image:
+      radial-gradient(rgba(255,255,255,0.45) 1.2px, transparent 1.7px),
+      linear-gradient(180deg, #c9d9f6 0%, #e9d6f2 55%, #fbd8e7 100%);
+    background-size: 20px 20px, 100% 100%;
+    background-attachment: fixed;
     min-height: 100vh;
-    padding: 24px 14px 60px;
+    padding: 26px 14px 60px;
     font-size: 14px;
     display: flex;
     flex-direction: column;
@@ -31,77 +43,74 @@
   }
 
   .raised {
-    border-top: 2px solid var(--win-white);
-    border-left: 2px solid var(--win-white);
-    border-right: 2px solid var(--win-darker);
-    border-bottom: 2px solid var(--win-darker);
-    background: var(--win-face);
+    background: var(--face);
+    border: 2px solid var(--line-strong);
+    border-radius: 16px;
   }
   .sunken {
-    border-top: 2px solid var(--win-darker);
-    border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white);
-    border-bottom: 2px solid var(--win-white);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
   }
 
   /* ── main window ── */
   .main-window {
     width: 100%; max-width: 980px;
-    box-shadow: 2px 2px 0 var(--win-black);
+    box-shadow: 0 14px 34px rgba(124, 86, 150, 0.28);
+    overflow: hidden;
   }
+
+  /* classic Mac pinstriped title bar, close box on the left */
   .title-bar {
-    background: var(--win-blue); color: #fff;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 3px 4px 3px 6px;
-    font-size: 13px; font-weight: bold; letter-spacing: 0.03em;
+    background: repeating-linear-gradient(180deg, var(--pink) 0 2px, #fff 2px 5px);
+    display: flex; align-items: center;
+    padding: 6px 10px;
     user-select: none;
   }
-  .title-bar-text { display: flex; align-items: center; gap: 8px; }
-  .title-icon {
-    width: 16px; height: 16px; background: var(--win-face);
-    border: 1px solid var(--win-black);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 9px; color: var(--win-black); flex-shrink: 0;
+  .title-bar-text {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: bold; color: var(--ink);
   }
-  .title-buttons { display: flex; gap: 2px; }
+  .title-bar-text span {
+    background: #fff; padding: 1px 14px; border-radius: 8px; display: inline-block;
+  }
   .title-btn {
-    width: 18px; height: 14px; background: var(--win-face);
-    border-top: 1px solid var(--win-white); border-left: 1px solid var(--win-white);
-    border-right: 1px solid var(--win-darker); border-bottom: 1px solid var(--win-darker);
-    font-size: 9px; color: var(--win-black);
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    width: 15px; height: 15px; flex-shrink: 0;
+    background: #fff; border: 1.5px solid var(--ink-soft);
+    border-radius: 5px; cursor: pointer;
   }
+  .title-btn:hover { background: var(--pink); }
 
   .menu-bar {
-    display: flex; gap: 14px;
-    padding: 3px 8px;
-    border-bottom: 2px solid var(--win-darker);
-    font-size: 13px; user-select: none;
+    display: flex; gap: 18px; align-items: center;
+    padding: 5px 16px;
+    background: #fff;
+    border-bottom: 1.5px solid var(--line);
+    font-size: 13px; font-weight: bold; color: var(--ink);
+    user-select: none;
   }
   .menu-bar span { cursor: default; }
-  .menu-bar span u { text-decoration: underline; }
+  .menu-bar .apple { color: var(--pink-deep); }
 
-  .window-body { padding: 14px; }
+  .window-body { padding: 16px; }
 
   /* ── intro strip ── */
   .intro {
-    background: var(--win-white);
-    padding: 10px 14px;
-    margin-bottom: 14px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 13px; color: #222; line-height: 1.55;
+    background: var(--paper);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px; color: var(--ink); line-height: 1.55;
   }
   .intro h1 {
-    font-family: 'Courier New', monospace;
-    font-size: 18px; margin-bottom: 4px; color: var(--win-black);
+    font-size: 18px; margin-bottom: 4px; color: var(--pink-deep);
+    letter-spacing: 0.02em;
   }
-  .intro .sub { color: #444; }
+  .intro .sub { color: var(--ink-soft); }
 
   /* ── tile grid ── */
   .tile-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 14px;
+    gap: 16px;
   }
   @media (max-width: 900px) {
     .tile-grid { grid-template-columns: 1fr; }
@@ -109,100 +118,104 @@
 
   /* ── tool tile (a mini window) ── */
   .tile {
-    background: var(--win-face);
-    border-top: 2px solid var(--win-white);
-    border-left: 2px solid var(--win-white);
-    border-right: 2px solid var(--win-darker);
-    border-bottom: 2px solid var(--win-darker);
-    box-shadow: 2px 2px 0 var(--win-black);
+    background: var(--face);
+    border: 2px solid var(--line-strong);
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(124, 86, 150, 0.2);
+    overflow: hidden;
     display: flex; flex-direction: column;
   }
-  .tile .title-bar { font-size: 12px; }
-  .tile-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .tile .title-bar { padding: 5px 8px; }
+  .tile .title-bar-text { font-size: 12px; }
+  .tile-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 
   .unit-tag {
     display: inline-block; align-self: flex-start;
     font-size: 11px; font-weight: bold; letter-spacing: 0.08em;
-    background: var(--win-blue); color: #fff;
-    padding: 2px 8px;
+    background: var(--pink-deep); color: #fff;
+    padding: 3px 12px; border-radius: 999px;
   }
 
   .tile-desc {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 13px; color: #222; line-height: 1.5;
-    background: var(--win-white);
-    padding: 8px 10px;
+    font-size: 13px; color: var(--ink); line-height: 1.55;
+    background: var(--paper);
+    padding: 9px 12px;
   }
 
   .demo-list {
-    background: var(--win-white);
-    padding: 6px 10px;
-    font-size: 12.5px; line-height: 1.7;
-    color: var(--win-black);
+    background: var(--paper);
+    padding: 8px 12px;
+    font-size: 12.5px; line-height: 1.75;
+    color: var(--ink);
   }
   .demo-list .dl-head {
-    font-weight: bold; font-size: 11px; letter-spacing: 0.06em;
-    color: #444; margin-bottom: 2px;
+    font-weight: bold; font-size: 10.5px; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin-bottom: 2px;
   }
   .demo-list ul { list-style: none; }
-  .demo-list li::before { content: '\25AA  '; color: var(--win-blue); }
+  .demo-list li::before { content: '\273F  '; color: var(--pink-deep); }
   .demo-list li code {
-    font-family: 'Courier New', monospace; color: #000080; font-weight: bold;
+    font-family: var(--mono); color: #7d5fc7; font-weight: bold;
   }
 
   /* ── embed panel ── */
   .embed-label {
-    font-size: 11px; font-weight: bold; letter-spacing: 0.06em;
-    color: var(--win-black); display: flex; align-items: center;
+    font-size: 10.5px; font-weight: bold; letter-spacing: 0.08em;
+    color: var(--ink-soft); display: flex; align-items: center;
     justify-content: space-between; gap: 8px;
   }
   .embed-panel {
     background: var(--code-bg);
-    padding: 8px 10px;
+    border-color: #4a3d66;
+    padding: 9px 12px;
     overflow-x: auto;
   }
   .embed-panel code {
-    font-family: 'Courier New', monospace; font-size: 12px;
+    font-family: var(--mono); font-size: 12px;
     color: var(--code-text); white-space: pre;
     display: block; line-height: 1.5;
   }
 
   /* ── buttons ── */
-  .tile-actions { display: flex; gap: 6px; align-items: center; }
+  .tile-actions { display: flex; gap: 8px; align-items: center; }
   .win-btn {
-    font-family: 'Courier New', monospace; font-size: 13px;
-    background: var(--win-face); color: var(--win-black);
-    border-top: 2px solid var(--win-white); border-left: 2px solid var(--win-white);
-    border-right: 2px solid var(--win-darker); border-bottom: 2px solid var(--win-darker);
-    padding: 4px 12px 3px; cursor: pointer;
+    font-family: var(--ui); font-size: 12.5px; font-weight: bold;
+    background: #fff; color: var(--ink);
+    border: 1.5px solid var(--line-strong);
+    border-radius: 9px;
+    padding: 5px 14px; cursor: pointer;
     white-space: nowrap; text-align: center; outline: none;
-    box-shadow: 1px 1px 0 var(--win-black);
-    position: relative; top: 0; left: 0;
+    box-shadow: 0 2px 0 var(--line-strong);
     text-decoration: none; display: inline-block;
   }
-  .win-btn:active {
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    top: 1px; left: 1px; box-shadow: none;
+  .win-btn:active { transform: translateY(2px); box-shadow: none; }
+  .win-btn:focus { outline: 2px dotted var(--lavender); outline-offset: 1px; }
+  .win-btn.primary {
+    background: var(--pink-deep); color: #fff;
+    border-color: #c25f85; box-shadow: 0 2px 0 #c25f85;
   }
-  .win-btn:focus { outline: 1px dotted var(--win-black); outline-offset: -4px; }
-  .win-btn.primary { font-weight: bold; }
-  .win-btn.small { font-size: 12px; padding: 2px 8px 1px; }
+  .win-btn.small { font-size: 11px; padding: 2px 10px; }
 
   /* ── coming-soon tile ── */
-  .tile.soon .title-bar { background: var(--win-dark); }
-  .tile.soon .tile-desc { color: #555; font-style: italic; }
+  .tile.soon {
+    border-style: dashed;
+    box-shadow: none;
+  }
+  .tile.soon .title-bar {
+    background: repeating-linear-gradient(180deg, #ded6ec 0 2px, #fff 2px 5px);
+  }
+  .tile.soon .tile-desc { color: var(--ink-soft); font-style: italic; }
 
   /* ── status bar ── */
   .status-bar {
-    margin-top: 14px;
-    display: flex; gap: 4px;
+    margin-top: 16px;
+    display: flex; gap: 6px;
   }
   .status-cell {
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    padding: 3px 10px; font-size: 12px; color: var(--win-black);
-    background: var(--win-face);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 14px; font-size: 12px; color: var(--ink-soft);
+    background: #fff;
   }
   .status-cell.grow { flex: 1; }
 
@@ -214,24 +227,18 @@
 
 <div class="main-window raised">
   <div class="title-bar">
-    <div class="title-bar-text">
-      <div class="title-icon">&#9632;</div>
-      CSIS 123A Visualizers &mdash; PROGMAN.EXE
-    </div>
-    <div class="title-buttons">
-      <div class="title-btn">&#9660;</div>
-      <div class="title-btn">&#9650;</div>
-      <div class="title-btn">&times;</div>
-    </div>
+    <div class="title-btn"></div>
+    <div class="title-bar-text"><span>&#10047; CSIS 123A Visualizers &#10047;</span></div>
+    <div class="title-btn"></div>
   </div>
 
   <div class="menu-bar">
-    <span><u>F</u>ile</span><span><u>O</u>ptions</span><span><u>W</u>indow</span><span><u>H</u>elp</span>
+    <span class="apple">&#10047;</span><span>File</span><span>Edit</span><span>View</span><span>Special</span>
   </div>
 
   <div class="window-body">
     <div class="intro sunken">
-      <h1>C:\CSIS123A\VISUALIZERS&gt;<span class="cursor">_</span></h1>
+      <h1>CSIS 123A &#9656; Visualizers <span class="cursor">&#9646;</span></h1>
       <div class="sub">
         Interactive, step-by-step visualizers for CSIS 123A (C++ Programming Fundamentals).
         Each tool runs entirely in the browser as a single self-contained HTML file &mdash;
@@ -254,7 +261,7 @@
 var TOOLS = [
   {
     unit: 'UNIT 11 — RECURSION',
-    title: 'Recursion Explorer — DEBUG.EXE',
+    title: 'Recursion Explorer',
     file: 'visualizers/recursion-explorer.html',
     embedHeight: 940,
     desc: 'A retro debugger that steps through recursive C++ functions one call at a time. ' +
@@ -305,8 +312,9 @@ TOOLS.forEach(function(tool, i) {
 
   tile.innerHTML =
     '<div class="title-bar">' +
-      '<div class="title-bar-text"><div class="title-icon">&#9632;</div>' + esc(tool.title) + '</div>' +
-      '<div class="title-buttons"><div class="title-btn">&#9660;</div><div class="title-btn">&#9650;</div><div class="title-btn">&times;</div></div>' +
+      '<div class="title-btn"></div>' +
+      '<div class="title-bar-text"><span>' + esc(tool.title) + '</span></div>' +
+      '<div class="title-btn"></div>' +
     '</div>' +
     '<div class="tile-body">' +
       '<span class="unit-tag">' + esc(tool.unit) + '</span>' +
@@ -333,11 +341,12 @@ var soon = document.createElement('div');
 soon.className = 'tile soon';
 soon.innerHTML =
   '<div class="title-bar">' +
-    '<div class="title-bar-text"><div class="title-icon">?</div>NEXT-TOOL.EXE &mdash; not installed</div>' +
-    '<div class="title-buttons"><div class="title-btn">&times;</div></div>' +
+    '<div class="title-btn"></div>' +
+    '<div class="title-bar-text"><span>&#9729; Next Visualizer</span></div>' +
+    '<div class="title-btn"></div>' +
   '</div>' +
   '<div class="tile-body">' +
-    '<span class="unit-tag" style="background:#808080">COMING SOON</span>' +
+    '<span class="unit-tag" style="background:#a99cc0">COMING SOON</span>' +
     '<div class="tile-desc sunken">The next unit\'s visualizer will appear here. ' +
     'Drop a new HTML file in visualizers/ and register it in the TOOLS list on this page.</div>' +
   '</div>';

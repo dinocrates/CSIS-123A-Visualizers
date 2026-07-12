@@ -3,237 +3,244 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recursion Explorer — DEBUG.EXE</title>
+<title>Recursion Explorer</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --win-bg:     #008080;
-    --win-face:   #c0c0c0;
-    --win-dark:   #808080;
-    --win-darker: #404040;
-    --win-black:  #000000;
-    --win-white:  #ffffff;
-    --win-blue:   #000080;
-    --code-bg:    #2b2b2b;
-    --code-text:  #f8f8f2;
+    --ink:         #5b4964;
+    --ink-soft:    #907e9c;
+    --line:        #e3cce4;
+    --line-strong: #c9a6cc;
+    --paper:       #fffdf9;
+    --face:        #fdf4f8;
+    --pink:        #f9c7da;
+    --pink-deep:   #e2799f;
+    --lavender:    #b7a6ea;
+    --blue:        #8fb3f0;
+    --mint:        #93dcb2;
+    --butter:      #ffd98e;
+    --code-bg:     #352c47;
+    --code-text:   #f4eefc;
+    --ui:   'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+    --mono: 'Courier New', Courier, monospace;
   }
 
   body {
-    font-family: 'Courier New', Courier, monospace;
-    background: var(--win-bg);
+    font-family: var(--ui);
+    color: var(--ink);
+    background-image:
+      radial-gradient(rgba(255,255,255,0.45) 1.2px, transparent 1.7px),
+      linear-gradient(180deg, #c9d9f6 0%, #e9d6f2 55%, #fbd8e7 100%);
+    background-size: 20px 20px, 100% 100%;
+    background-attachment: fixed;
     min-height: 100vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 20px 10px 40px;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 24px 12px 48px;
     font-size: 14px;
   }
 
   .window {
     width: 100%; max-width: 650px;
-    background: var(--win-face);
-    border-top: 2px solid var(--win-white);
-    border-left: 2px solid var(--win-white);
-    border-right: 2px solid var(--win-darker);
-    border-bottom: 2px solid var(--win-darker);
-    box-shadow: 2px 2px 0 var(--win-black);
+    background: var(--face);
+    border: 2px solid var(--line-strong);
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(124, 86, 150, 0.28);
+    overflow: hidden;
   }
 
+  /* classic Mac pinstriped title bar, close box on the left */
   .title-bar {
-    background: var(--win-blue);
-    color: #fff;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 3px 4px 3px 6px;
-    font-size: 13px; font-weight: bold;
-    letter-spacing: 0.03em; user-select: none;
+    background: repeating-linear-gradient(180deg, var(--pink) 0 2px, #fff 2px 5px);
+    display: flex; align-items: center;
+    padding: 6px 10px;
+    user-select: none;
   }
-  .title-bar-text { display: flex; align-items: center; gap: 8px; }
-  .title-icon {
-    width: 16px; height: 16px; background: var(--win-face);
-    border: 1px solid var(--win-black);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 9px; color: var(--win-black); flex-shrink: 0;
+  .title-bar-text {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: bold; color: var(--ink);
   }
-  .title-buttons { display: flex; gap: 2px; }
+  .title-bar-text span {
+    background: #fff; padding: 1px 14px; border-radius: 8px; display: inline-block;
+  }
   .title-btn {
-    width: 18px; height: 14px; background: var(--win-face);
-    border-top: 1px solid var(--win-white); border-left: 1px solid var(--win-white);
-    border-right: 1px solid var(--win-darker); border-bottom: 1px solid var(--win-darker);
-    font-size: 9px; color: var(--win-black);
-    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    width: 15px; height: 15px; flex-shrink: 0;
+    background: #fff; border: 1.5px solid var(--ink-soft);
+    border-radius: 5px; cursor: pointer;
   }
+  .title-btn:hover { background: var(--pink); }
 
   /* tab bar */
   .tabbar {
-    background: var(--win-face);
-    border-bottom: 2px solid var(--win-darker);
-    display: flex; flex-wrap: wrap; gap: 2px;
-    padding: 4px 6px 0;
+    border-bottom: 1.5px solid var(--line-strong);
+    display: flex; flex-wrap: wrap; gap: 3px;
+    padding: 8px 10px 0;
   }
   .tab {
-    font-family: 'Courier New', monospace; font-size: 12px;
-    background: var(--win-face); color: var(--win-black);
-    border-top: 2px solid var(--win-white); border-left: 2px solid var(--win-white);
-    border-right: 2px solid var(--win-darker); border-bottom: 2px solid var(--win-face);
-    padding: 3px 10px 4px; cursor: pointer;
-    white-space: nowrap; position: relative; top: 2px;
+    font-size: 12.5px;
+    background: #f6e4ee; color: var(--ink-soft);
+    border: 1.5px solid var(--line); border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 4px 12px 5px; cursor: pointer;
+    white-space: nowrap; position: relative; top: 1.5px;
   }
-  .tab:hover { background: #d4d4d4; }
+  .tab:hover { background: #fdeef5; }
   .tab.active {
-    background: var(--win-white);
-    border-bottom: 2px solid var(--win-white);
+    background: var(--paper); color: var(--ink);
+    border-color: var(--line-strong);
     font-weight: bold;
   }
 
-  .window-body { padding: 10px; }
+  .window-body { padding: 12px; }
 
   .panel-label {
-    font-size: 12px; font-weight: bold; color: var(--win-black);
-    margin-bottom: 3px; letter-spacing: 0.05em;
+    font-size: 11px; font-weight: bold; color: var(--ink-soft);
+    margin: 0 0 4px 4px; letter-spacing: 0.08em;
   }
 
   .inset {
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    background: var(--win-white); margin-bottom: 8px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper); margin-bottom: 10px;
+    overflow: hidden;
   }
 
   /* demo description strip */
   .demo-desc {
-    background: var(--win-white);
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    padding: 5px 8px; margin-bottom: 8px;
-    font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #333;
-    line-height: 1.4;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 10px;
+    font-size: 12.5px; color: var(--ink);
+    line-height: 1.5;
   }
-  .demo-desc strong { font-family: 'Courier New', monospace; color: var(--win-black); }
+  .demo-desc strong { font-family: var(--mono); color: var(--pink-deep); }
 
   .code-panel {
     background: var(--code-bg); color: var(--code-text);
-    padding: 8px 12px; font-size: 13px;
-    font-family: 'Courier New', monospace; line-height: 1;
+    padding: 10px 12px; font-size: 13px;
+    font-family: var(--mono); line-height: 1;
   }
   .code-line {
-    padding: 3px 5px; white-space: pre; color: var(--code-text);
+    padding: 3px 6px; white-space: pre; color: var(--code-text);
+    border-radius: 6px;
     transition: background 0.1s, color 0.1s; display: block;
   }
-  .code-line.active-call   { background: #003d99; outline: 2px solid #5588ff; outline-offset: -2px; }
-  .code-line.active-base   { background: #4d4400; outline: 2px solid #ffee55; outline-offset: -2px; }
-  .code-line.active-return { background: #004d22; outline: 2px solid #44dd77; outline-offset: -2px; }
-  .code-line.active-output { background: #4d0066; outline: 2px solid #cc55ff; outline-offset: -2px; }
-  .code-line.dim           { opacity: 0.35; }
+  .code-line.active-call   { background: #3c4d78; outline: 2px solid var(--blue); outline-offset: -2px; }
+  .code-line.active-base   { background: #6b5a2e; outline: 2px solid var(--butter); outline-offset: -2px; }
+  .code-line.active-return { background: #2f5a45; outline: 2px solid var(--mint); outline-offset: -2px; }
+  .code-line.active-output { background: #5c3a63; outline: 2px solid #f2a6e8; outline-offset: -2px; }
+  .code-line.dim           { opacity: 0.38; }
 
 
   .trace-panel {
-    background: #000; color: var(--code-text);
-    padding: 8px 10px; font-size: 13px;
-    font-family: 'Courier New', monospace; min-height: 72px; line-height: 1;
+    background: #2b2340; color: var(--code-text);
+    padding: 10px 12px; font-size: 13px;
+    font-family: var(--mono); min-height: 72px; line-height: 1;
   }
   .trace-row { display: flex; align-items: flex-start; min-height: 24px; }
   .trace-line {
-    padding: 4px 0; flex: 1; white-space: pre; color: #444;
+    padding: 4px 0; flex: 1; white-space: pre; color: #544a6e;
     transition: color 0.1s; font-size: 13px; line-height: 1.4;
   }
-  .trace-line.current  { color: #ffff55; }
-  .trace-line.waiting  { color: #888; }
-  .trace-line.resolved { color: #55ff55; }
-  .trace-line.output   { color: #ff55ff; }
+  .trace-line.current  { color: #ffd97a; }
+  .trace-line.waiting  { color: #8d80ad; }
+  .trace-line.resolved { color: #8ee6a8; }
+  .trace-line.output   { color: #f2a6e8; }
 
   .status-bar {
-    background: var(--win-face);
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    padding: 3px 8px; font-size: 12px; color: var(--win-black);
-    margin-bottom: 8px; display: flex; align-items: center; gap: 8px; min-height: 24px;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 4px 10px; font-size: 12px; color: var(--ink);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px; min-height: 26px;
   }
-  .status-dot { width: 10px; height: 10px; border: 1px solid var(--win-darker); flex-shrink: 0; }
-  .status-dot.call   { background: #0000ff; }
-  .status-dot.base   { background: #ffff00; }
-  .status-dot.return { background: #00aa00; }
-  .status-dot.output { background: #ff00ff; }
+  .status-bar span { font-family: var(--mono); }
+  .status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 1.5px solid rgba(91, 73, 100, 0.3); flex-shrink: 0;
+  }
+  .status-dot.call   { background: var(--blue); }
+  .status-dot.base   { background: var(--butter); }
+  .status-dot.return { background: var(--mint); }
+  .status-dot.output { background: #f2a6e8; }
 
   .narration-box {
-    min-height: 90px; margin-bottom: 8px; background: var(--win-white);
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    min-height: 90px; margin-bottom: 10px; background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 10px; overflow: hidden;
     display: flex; flex-direction: column;
   }
   .nar-header {
     display: flex; align-items: center; gap: 8px;
-    padding: 5px 8px 4px; border-bottom: 1px solid #ccc; background: #e0e0e0;
+    padding: 6px 10px; border-bottom: 1.5px solid var(--line); background: #f9e9f2;
   }
   .nar-phase-tag {
-    font-family: 'Courier New', monospace; font-size: 11px; font-weight: bold;
-    letter-spacing: 0.06em; padding: 1px 6px; white-space: nowrap;
-    border-top: 1px solid var(--win-white); border-left: 1px solid var(--win-white);
-    border-right: 1px solid var(--win-darker); border-bottom: 1px solid var(--win-darker);
+    font-size: 10.5px; font-weight: bold;
+    letter-spacing: 0.06em; padding: 2px 10px; white-space: nowrap;
+    border-radius: 999px;
   }
-  .nar-phase-tag.call   { background: #0000cc; color: #fff; }
-  .nar-phase-tag.base   { background: #888800; color: #fff; }
-  .nar-phase-tag.return { background: #006600; color: #fff; }
-  .nar-phase-tag.output { background: #660066; color: #fff; }
+  .nar-phase-tag.call   { background: #dbe6ff; color: #3f5fa8; }
+  .nar-phase-tag.base   { background: #ffefc9; color: #8a6b1f; }
+  .nar-phase-tag.return { background: #d7f3e2; color: #2f7a52; }
+  .nar-phase-tag.output { background: #f8ddf4; color: #8a3f7d; }
   .nar-headline {
-    font-family: 'Courier New', monospace; font-size: 13px;
-    font-weight: bold; color: var(--win-black);
+    font-family: var(--mono); font-size: 13px;
+    font-weight: bold; color: var(--ink);
   }
-  .nar-body { padding: 6px 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .nar-body { padding: 7px 12px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
   .nar-explain {
-    font-family: Arial, Helvetica, sans-serif; font-size: 13px;
-    color: #222; line-height: 1.5;
+    font-size: 13px;
+    color: var(--ink); line-height: 1.55;
   }
   .nar-math {
-    font-family: 'Courier New', monospace; font-size: 13px;
-    background: #f0f0f0; border: 1px solid #bbb;
-    padding: 3px 8px; color: #004400;
+    font-family: var(--mono); font-size: 12.5px;
+    background: #f3ecfb; border: 1px solid #d8c8ec; border-radius: 8px;
+    padding: 3px 10px; color: #5a3f7d;
     display: inline-block; align-self: flex-start;
   }
 
   .progress-wrap {
-    height: 16px; background: var(--win-white);
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    margin-bottom: 8px; overflow: hidden;
+    height: 14px; background: #fff;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    margin-bottom: 10px; overflow: hidden;
   }
   .progress-fill {
-    height: 100%; background: var(--win-blue); transition: width 0.2s;
+    height: 100%; background: linear-gradient(90deg, var(--lavender), var(--pink-deep));
+    border-radius: 999px; transition: width 0.2s;
     display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 4px; font-size: 11px; color: #fff; white-space: nowrap;
+    padding-right: 6px; font-size: 10px; font-weight: bold; color: #fff; white-space: nowrap;
   }
 
   .divider {
-    height: 0; border-top: 1px solid var(--win-darker);
-    border-bottom: 1px solid var(--win-white); margin: 8px 0;
+    height: 0; border: none;
+    border-top: 1.5px dashed var(--line-strong); margin: 10px 0;
   }
 
-  .controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
   .win-btn {
-    font-family: 'Courier New', monospace; font-size: 13px;
-    background: var(--win-face); color: var(--win-black);
-    border-top: 2px solid var(--win-white); border-left: 2px solid var(--win-white);
-    border-right: 2px solid var(--win-darker); border-bottom: 2px solid var(--win-darker);
-    padding: 3px 10px 2px; cursor: pointer;
+    font-family: var(--ui); font-size: 12.5px; font-weight: bold;
+    background: #fff; color: var(--ink);
+    border: 1.5px solid var(--line-strong);
+    border-radius: 9px;
+    padding: 4px 12px; cursor: pointer;
     white-space: nowrap; min-width: 56px; text-align: center; outline: none;
-    box-shadow: 1px 1px 0 var(--win-black); position: relative; top: 0; left: 0;
+    box-shadow: 0 2px 0 var(--line-strong);
   }
-  .win-btn:active:not(:disabled) {
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    top: 1px; left: 1px; box-shadow: none;
-  }
-  .win-btn:disabled { color: var(--win-dark); cursor: default; }
-  .win-btn:focus { outline: 1px dotted var(--win-black); outline-offset: -4px; }
+  .win-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+  .win-btn:disabled { color: #c3b4cc; border-color: var(--line); box-shadow: 0 2px 0 var(--line); cursor: default; }
+  .win-btn:focus { outline: 2px dotted var(--lavender); outline-offset: 1px; }
 
   .spacer { flex: 1; }
-  .picker-label { font-size: 13px; color: var(--win-black); font-weight: bold; white-space: nowrap; }
+  .picker-label { font-size: 12.5px; color: var(--ink); font-weight: bold; white-space: nowrap; }
   select.win-select {
-    font-family: 'Courier New', monospace; font-size: 13px;
-    background: var(--win-white); color: var(--win-black);
-    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
-    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
-    padding: 2px 6px; outline: none; cursor: pointer;
+    font-family: var(--mono); font-size: 13px;
+    background: #fff; color: var(--ink);
+    border: 1.5px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 3px 8px; outline: none; cursor: pointer;
   }
 
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
@@ -243,15 +250,9 @@
 <body>
 <div class="window">
   <div class="title-bar">
-    <div class="title-bar-text">
-      <div class="title-icon">&#9632;</div>
-      Recursion Explorer &mdash; DEBUG.EXE v2.0
-    </div>
-    <div class="title-buttons">
-      <div class="title-btn">&#9660;</div>
-      <div class="title-btn">&#9650;</div>
-      <div class="title-btn">&times;</div>
-    </div>
+    <div class="title-btn"></div>
+    <div class="title-bar-text"><span>&#10047; Recursion Explorer &#10047;</span></div>
+    <div class="title-btn"></div>
   </div>
 
   <div class="tabbar" id="tabbar"></div>
