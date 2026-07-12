@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSIS 123A Visualizers — Program Manager</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --win-bg:     #008080;
+    --win-face:   #c0c0c0;
+    --win-dark:   #808080;
+    --win-darker: #404040;
+    --win-black:  #000000;
+    --win-white:  #ffffff;
+    --win-blue:   #000080;
+    --code-bg:    #2b2b2b;
+    --code-text:  #f8f8f2;
+  }
+
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    background: var(--win-bg);
+    min-height: 100vh;
+    padding: 24px 14px 60px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .raised {
+    border-top: 2px solid var(--win-white);
+    border-left: 2px solid var(--win-white);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: 2px solid var(--win-darker);
+    background: var(--win-face);
+  }
+  .sunken {
+    border-top: 2px solid var(--win-darker);
+    border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white);
+    border-bottom: 2px solid var(--win-white);
+  }
+
+  /* ── main window ── */
+  .main-window {
+    width: 100%; max-width: 980px;
+    box-shadow: 2px 2px 0 var(--win-black);
+  }
+  .title-bar {
+    background: var(--win-blue); color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 3px 4px 3px 6px;
+    font-size: 13px; font-weight: bold; letter-spacing: 0.03em;
+    user-select: none;
+  }
+  .title-bar-text { display: flex; align-items: center; gap: 8px; }
+  .title-icon {
+    width: 16px; height: 16px; background: var(--win-face);
+    border: 1px solid var(--win-black);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--win-black); flex-shrink: 0;
+  }
+  .title-buttons { display: flex; gap: 2px; }
+  .title-btn {
+    width: 18px; height: 14px; background: var(--win-face);
+    border-top: 1px solid var(--win-white); border-left: 1px solid var(--win-white);
+    border-right: 1px solid var(--win-darker); border-bottom: 1px solid var(--win-darker);
+    font-size: 9px; color: var(--win-black);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+
+  .menu-bar {
+    display: flex; gap: 14px;
+    padding: 3px 8px;
+    border-bottom: 2px solid var(--win-darker);
+    font-size: 13px; user-select: none;
+  }
+  .menu-bar span { cursor: default; }
+  .menu-bar span u { text-decoration: underline; }
+
+  .window-body { padding: 14px; }
+
+  /* ── intro strip ── */
+  .intro {
+    background: var(--win-white);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px; color: #222; line-height: 1.55;
+  }
+  .intro h1 {
+    font-family: 'Courier New', monospace;
+    font-size: 18px; margin-bottom: 4px; color: var(--win-black);
+  }
+  .intro .sub { color: #444; }
+
+  /* ── tile grid ── */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 900px) {
+    .tile-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── tool tile (a mini window) ── */
+  .tile {
+    background: var(--win-face);
+    border-top: 2px solid var(--win-white);
+    border-left: 2px solid var(--win-white);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: 2px solid var(--win-darker);
+    box-shadow: 2px 2px 0 var(--win-black);
+    display: flex; flex-direction: column;
+  }
+  .tile .title-bar { font-size: 12px; }
+  .tile-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+  .unit-tag {
+    display: inline-block; align-self: flex-start;
+    font-size: 11px; font-weight: bold; letter-spacing: 0.08em;
+    background: var(--win-blue); color: #fff;
+    padding: 2px 8px;
+  }
+
+  .tile-desc {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px; color: #222; line-height: 1.5;
+    background: var(--win-white);
+    padding: 8px 10px;
+  }
+
+  .demo-list {
+    background: var(--win-white);
+    padding: 6px 10px;
+    font-size: 12.5px; line-height: 1.7;
+    color: var(--win-black);
+  }
+  .demo-list .dl-head {
+    font-weight: bold; font-size: 11px; letter-spacing: 0.06em;
+    color: #444; margin-bottom: 2px;
+  }
+  .demo-list ul { list-style: none; }
+  .demo-list li::before { content: '\25AA  '; color: var(--win-blue); }
+  .demo-list li code {
+    font-family: 'Courier New', monospace; color: #000080; font-weight: bold;
+  }
+
+  /* ── embed panel ── */
+  .embed-label {
+    font-size: 11px; font-weight: bold; letter-spacing: 0.06em;
+    color: var(--win-black); display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+  }
+  .embed-panel {
+    background: var(--code-bg);
+    padding: 8px 10px;
+    overflow-x: auto;
+  }
+  .embed-panel code {
+    font-family: 'Courier New', monospace; font-size: 12px;
+    color: var(--code-text); white-space: pre;
+    display: block; line-height: 1.5;
+  }
+
+  /* ── buttons ── */
+  .tile-actions { display: flex; gap: 6px; align-items: center; }
+  .win-btn {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    background: var(--win-face); color: var(--win-black);
+    border-top: 2px solid var(--win-white); border-left: 2px solid var(--win-white);
+    border-right: 2px solid var(--win-darker); border-bottom: 2px solid var(--win-darker);
+    padding: 4px 12px 3px; cursor: pointer;
+    white-space: nowrap; text-align: center; outline: none;
+    box-shadow: 1px 1px 0 var(--win-black);
+    position: relative; top: 0; left: 0;
+    text-decoration: none; display: inline-block;
+  }
+  .win-btn:active {
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    top: 1px; left: 1px; box-shadow: none;
+  }
+  .win-btn:focus { outline: 1px dotted var(--win-black); outline-offset: -4px; }
+  .win-btn.primary { font-weight: bold; }
+  .win-btn.small { font-size: 12px; padding: 2px 8px 1px; }
+
+  /* ── coming-soon tile ── */
+  .tile.soon .title-bar { background: var(--win-dark); }
+  .tile.soon .tile-desc { color: #555; font-style: italic; }
+
+  /* ── status bar ── */
+  .status-bar {
+    margin-top: 14px;
+    display: flex; gap: 4px;
+  }
+  .status-cell {
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    padding: 3px 10px; font-size: 12px; color: var(--win-black);
+    background: var(--win-face);
+  }
+  .status-cell.grow { flex: 1; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor { animation: blink 1s step-start infinite; }
+</style>
+</head>
+<body>
+
+<div class="main-window raised">
+  <div class="title-bar">
+    <div class="title-bar-text">
+      <div class="title-icon">&#9632;</div>
+      CSIS 123A Visualizers &mdash; PROGMAN.EXE
+    </div>
+    <div class="title-buttons">
+      <div class="title-btn">&#9660;</div>
+      <div class="title-btn">&#9650;</div>
+      <div class="title-btn">&times;</div>
+    </div>
+  </div>
+
+  <div class="menu-bar">
+    <span><u>F</u>ile</span><span><u>O</u>ptions</span><span><u>W</u>indow</span><span><u>H</u>elp</span>
+  </div>
+
+  <div class="window-body">
+    <div class="intro sunken">
+      <h1>C:\CSIS123A\VISUALIZERS&gt;<span class="cursor">_</span></h1>
+      <div class="sub">
+        Interactive, step-by-step visualizers for CSIS 123A (C++ Programming Fundamentals).
+        Each tool runs entirely in the browser as a single self-contained HTML file &mdash;
+        launch it full-page, or copy the embed code to drop it into Canvas or any web page.
+      </div>
+    </div>
+
+    <div class="tile-grid" id="tile-grid"></div>
+
+    <div class="status-bar">
+      <div class="status-cell grow" id="status-msg">Ready.</div>
+      <div class="status-cell" id="tool-count"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── tool catalog ────────────────────────────────────────────────────────────
+// To add a new visualizer: drop its HTML file in visualizers/ and add an entry here.
+var TOOLS = [
+  {
+    unit: 'UNIT 11 — RECURSION',
+    title: 'Recursion Explorer — DEBUG.EXE',
+    file: 'visualizers/recursion-explorer.html',
+    embedHeight: 940,
+    desc: 'A retro debugger that steps through recursive C++ functions one call at a time. ' +
+          'Watch the call stack grow as calls descend, hit the base case, and unwind back up ' +
+          'with results. Every step highlights the active source line and narrates what is ' +
+          'happening and why — including the math at each return.',
+    demos: [
+      { sig: 'factorial(n)',     what: 'classic integer recursion (n!)' },
+      { sig: 'writeVertical(n)', what: 'void recursion — prints digits top-to-bottom' },
+      { sig: 'power(b, e)',      what: 'two parameters, exponent counts down to 0' },
+      { sig: 'fibonacci(n)',     what: 'tree recursion — two calls per frame' },
+      { sig: 'reverse(s)',       what: 'recursion on strings, char by char' },
+    ],
+  },
+];
+
+// ─── embed URL: resolve against where this page is actually hosted ──────────
+// When browsed from GitHub Pages the snippet points at the live site; when
+// opened locally it falls back to the published GitHub Pages URL so copied
+// embed code always works.
+var SITE_BASE = 'https://dinocrates.github.io/CSIS-123A-Visualizers/';
+function embedUrl(file) {
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    return new URL(file, location.href).href;
+  }
+  return SITE_BASE + file;
+}
+function embedSnippet(tool) {
+  return '<iframe src="' + embedUrl(tool.file) + '"\n' +
+         '        width="100%" height="' + tool.embedHeight + '"\n' +
+         '        style="border:none;" title="' + tool.title + '"></iframe>';
+}
+
+function esc(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── build tiles ─────────────────────────────────────────────────────────────
+var grid = document.getElementById('tile-grid');
+
+TOOLS.forEach(function(tool, i) {
+  var tile = document.createElement('div');
+  tile.className = 'tile';
+
+  var demoItems = tool.demos.map(function(d) {
+    return '<li><code>' + esc(d.sig) + '</code> &mdash; ' + esc(d.what) + '</li>';
+  }).join('');
+
+  tile.innerHTML =
+    '<div class="title-bar">' +
+      '<div class="title-bar-text"><div class="title-icon">&#9632;</div>' + esc(tool.title) + '</div>' +
+      '<div class="title-buttons"><div class="title-btn">&#9660;</div><div class="title-btn">&#9650;</div><div class="title-btn">&times;</div></div>' +
+    '</div>' +
+    '<div class="tile-body">' +
+      '<span class="unit-tag">' + esc(tool.unit) + '</span>' +
+      '<div class="tile-desc sunken">' + esc(tool.desc) + '</div>' +
+      '<div class="demo-list sunken">' +
+        '<div class="dl-head">INCLUDED DEMOS:</div>' +
+        '<ul>' + demoItems + '</ul>' +
+      '</div>' +
+      '<div class="embed-label">EMBED CODE:' +
+        '<button class="win-btn small" data-copy="' + i + '">&#9744; Copy</button>' +
+      '</div>' +
+      '<div class="embed-panel sunken"><code id="embed-' + i + '">' + esc(embedSnippet(tool)) + '</code></div>' +
+      '<div class="tile-actions">' +
+        '<a class="win-btn primary" href="' + tool.file + '">&#9654; Launch</a>' +
+        '<a class="win-btn" href="' + tool.file + '" target="_blank" rel="noopener">New window</a>' +
+      '</div>' +
+    '</div>';
+
+  grid.appendChild(tile);
+});
+
+// coming-soon placeholder tile
+var soon = document.createElement('div');
+soon.className = 'tile soon';
+soon.innerHTML =
+  '<div class="title-bar">' +
+    '<div class="title-bar-text"><div class="title-icon">?</div>NEXT-TOOL.EXE &mdash; not installed</div>' +
+    '<div class="title-buttons"><div class="title-btn">&times;</div></div>' +
+  '</div>' +
+  '<div class="tile-body">' +
+    '<span class="unit-tag" style="background:#808080">COMING SOON</span>' +
+    '<div class="tile-desc sunken">The next unit\'s visualizer will appear here. ' +
+    'Drop a new HTML file in visualizers/ and register it in the TOOLS list on this page.</div>' +
+  '</div>';
+grid.appendChild(soon);
+
+document.getElementById('tool-count').textContent =
+  TOOLS.length + ' tool' + (TOOLS.length === 1 ? '' : 's') + ' installed';
+
+// ─── copy-to-clipboard ───────────────────────────────────────────────────────
+var statusMsg = document.getElementById('status-msg');
+document.querySelectorAll('[data-copy]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var i = btn.getAttribute('data-copy');
+    var text = document.getElementById('embed-' + i).textContent;
+    function done() {
+      btn.innerHTML = '&#9745; Copied!';
+      statusMsg.textContent = 'Embed code copied to clipboard.';
+      setTimeout(function() {
+        btn.innerHTML = '&#9744; Copy';
+        statusMsg.textContent = 'Ready.';
+      }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function() { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  });
+});
+function fallbackCopy(text, done) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); }
+  catch (e) { statusMsg.textContent = 'Copy failed — select the code and copy manually.'; }
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>

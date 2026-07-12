@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recursion Explorer — DEBUG.EXE</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --win-bg:     #008080;
+    --win-face:   #c0c0c0;
+    --win-dark:   #808080;
+    --win-darker: #404040;
+    --win-black:  #000000;
+    --win-white:  #ffffff;
+    --win-blue:   #000080;
+    --code-bg:    #2b2b2b;
+    --code-text:  #f8f8f2;
+  }
+
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    background: var(--win-bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px 10px 40px;
+    font-size: 14px;
+  }
+
+  .window {
+    width: 100%; max-width: 650px;
+    background: var(--win-face);
+    border-top: 2px solid var(--win-white);
+    border-left: 2px solid var(--win-white);
+    border-right: 2px solid var(--win-darker);
+    border-bottom: 2px solid var(--win-darker);
+    box-shadow: 2px 2px 0 var(--win-black);
+  }
+
+  .title-bar {
+    background: var(--win-blue);
+    color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 3px 4px 3px 6px;
+    font-size: 13px; font-weight: bold;
+    letter-spacing: 0.03em; user-select: none;
+  }
+  .title-bar-text { display: flex; align-items: center; gap: 8px; }
+  .title-icon {
+    width: 16px; height: 16px; background: var(--win-face);
+    border: 1px solid var(--win-black);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--win-black); flex-shrink: 0;
+  }
+  .title-buttons { display: flex; gap: 2px; }
+  .title-btn {
+    width: 18px; height: 14px; background: var(--win-face);
+    border-top: 1px solid var(--win-white); border-left: 1px solid var(--win-white);
+    border-right: 1px solid var(--win-darker); border-bottom: 1px solid var(--win-darker);
+    font-size: 9px; color: var(--win-black);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+
+  /* tab bar */
+  .tabbar {
+    background: var(--win-face);
+    border-bottom: 2px solid var(--win-darker);
+    display: flex; flex-wrap: wrap; gap: 2px;
+    padding: 4px 6px 0;
+  }
+  .tab {
+    font-family: 'Courier New', monospace; font-size: 12px;
+    background: var(--win-face); color: var(--win-black);
+    border-top: 2px solid var(--win-white); border-left: 2px solid var(--win-white);
+    border-right: 2px solid var(--win-darker); border-bottom: 2px solid var(--win-face);
+    padding: 3px 10px 4px; cursor: pointer;
+    white-space: nowrap; position: relative; top: 2px;
+  }
+  .tab:hover { background: #d4d4d4; }
+  .tab.active {
+    background: var(--win-white);
+    border-bottom: 2px solid var(--win-white);
+    font-weight: bold;
+  }
+
+  .window-body { padding: 10px; }
+
+  .panel-label {
+    font-size: 12px; font-weight: bold; color: var(--win-black);
+    margin-bottom: 3px; letter-spacing: 0.05em;
+  }
+
+  .inset {
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    background: var(--win-white); margin-bottom: 8px;
+  }
+
+  /* demo description strip */
+  .demo-desc {
+    background: var(--win-white);
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    padding: 5px 8px; margin-bottom: 8px;
+    font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #333;
+    line-height: 1.4;
+  }
+  .demo-desc strong { font-family: 'Courier New', monospace; color: var(--win-black); }
+
+  .code-panel {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 8px 12px; font-size: 13px;
+    font-family: 'Courier New', monospace; line-height: 1;
+  }
+  .code-line {
+    padding: 3px 5px; white-space: pre; color: var(--code-text);
+    transition: background 0.1s, color 0.1s; display: block;
+  }
+  .code-line.active-call   { background: #003d99; outline: 2px solid #5588ff; outline-offset: -2px; }
+  .code-line.active-base   { background: #4d4400; outline: 2px solid #ffee55; outline-offset: -2px; }
+  .code-line.active-return { background: #004d22; outline: 2px solid #44dd77; outline-offset: -2px; }
+  .code-line.active-output { background: #4d0066; outline: 2px solid #cc55ff; outline-offset: -2px; }
+  .code-line.dim           { opacity: 0.35; }
+
+
+  .trace-panel {
+    background: #000; color: var(--code-text);
+    padding: 8px 10px; font-size: 13px;
+    font-family: 'Courier New', monospace; min-height: 72px; line-height: 1;
+  }
+  .trace-row { display: flex; align-items: flex-start; min-height: 24px; }
+  .trace-line {
+    padding: 4px 0; flex: 1; white-space: pre; color: #444;
+    transition: color 0.1s; font-size: 13px; line-height: 1.4;
+  }
+  .trace-line.current  { color: #ffff55; }
+  .trace-line.waiting  { color: #888; }
+  .trace-line.resolved { color: #55ff55; }
+  .trace-line.output   { color: #ff55ff; }
+
+  .status-bar {
+    background: var(--win-face);
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    padding: 3px 8px; font-size: 12px; color: var(--win-black);
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px; min-height: 24px;
+  }
+  .status-dot { width: 10px; height: 10px; border: 1px solid var(--win-darker); flex-shrink: 0; }
+  .status-dot.call   { background: #0000ff; }
+  .status-dot.base   { background: #ffff00; }
+  .status-dot.return { background: #00aa00; }
+  .status-dot.output { background: #ff00ff; }
+
+  .narration-box {
+    min-height: 90px; margin-bottom: 8px; background: var(--win-white);
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    display: flex; flex-direction: column;
+  }
+  .nar-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px 4px; border-bottom: 1px solid #ccc; background: #e0e0e0;
+  }
+  .nar-phase-tag {
+    font-family: 'Courier New', monospace; font-size: 11px; font-weight: bold;
+    letter-spacing: 0.06em; padding: 1px 6px; white-space: nowrap;
+    border-top: 1px solid var(--win-white); border-left: 1px solid var(--win-white);
+    border-right: 1px solid var(--win-darker); border-bottom: 1px solid var(--win-darker);
+  }
+  .nar-phase-tag.call   { background: #0000cc; color: #fff; }
+  .nar-phase-tag.base   { background: #888800; color: #fff; }
+  .nar-phase-tag.return { background: #006600; color: #fff; }
+  .nar-phase-tag.output { background: #660066; color: #fff; }
+  .nar-headline {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    font-weight: bold; color: var(--win-black);
+  }
+  .nar-body { padding: 6px 10px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .nar-explain {
+    font-family: Arial, Helvetica, sans-serif; font-size: 13px;
+    color: #222; line-height: 1.5;
+  }
+  .nar-math {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    background: #f0f0f0; border: 1px solid #bbb;
+    padding: 3px 8px; color: #004400;
+    display: inline-block; align-self: flex-start;
+  }
+
+  .progress-wrap {
+    height: 16px; background: var(--win-white);
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    margin-bottom: 8px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--win-blue); transition: width 0.2s;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 4px; font-size: 11px; color: #fff; white-space: nowrap;
+  }
+
+  .divider {
+    height: 0; border-top: 1px solid var(--win-darker);
+    border-bottom: 1px solid var(--win-white); margin: 8px 0;
+  }
+
+  .controls { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+
+  .win-btn {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    background: var(--win-face); color: var(--win-black);
+    border-top: 2px solid var(--win-white); border-left: 2px solid var(--win-white);
+    border-right: 2px solid var(--win-darker); border-bottom: 2px solid var(--win-darker);
+    padding: 3px 10px 2px; cursor: pointer;
+    white-space: nowrap; min-width: 56px; text-align: center; outline: none;
+    box-shadow: 1px 1px 0 var(--win-black); position: relative; top: 0; left: 0;
+  }
+  .win-btn:active:not(:disabled) {
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    top: 1px; left: 1px; box-shadow: none;
+  }
+  .win-btn:disabled { color: var(--win-dark); cursor: default; }
+  .win-btn:focus { outline: 1px dotted var(--win-black); outline-offset: -4px; }
+
+  .spacer { flex: 1; }
+  .picker-label { font-size: 13px; color: var(--win-black); font-weight: bold; white-space: nowrap; }
+  select.win-select {
+    font-family: 'Courier New', monospace; font-size: 13px;
+    background: var(--win-white); color: var(--win-black);
+    border-top: 2px solid var(--win-darker); border-left: 2px solid var(--win-darker);
+    border-right: 2px solid var(--win-white); border-bottom: 2px solid var(--win-white);
+    padding: 2px 6px; outline: none; cursor: pointer;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .cursor { animation: blink 1s step-start infinite; }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="title-bar">
+    <div class="title-bar-text">
+      <div class="title-icon">&#9632;</div>
+      Recursion Explorer &mdash; DEBUG.EXE v2.0
+    </div>
+    <div class="title-buttons">
+      <div class="title-btn">&#9660;</div>
+      <div class="title-btn">&#9650;</div>
+      <div class="title-btn">&times;</div>
+    </div>
+  </div>
+
+  <div class="tabbar" id="tabbar"></div>
+
+  <div class="window-body">
+    <div class="demo-desc" id="demo-desc"></div>
+
+    <div class="panel-label">SOURCE CODE:</div>
+    <div class="inset"><div class="code-panel" id="code-panel"></div></div>
+
+    <div class="panel-label">CALL TRACE:</div>
+    <div class="inset"><div class="trace-panel" id="trace-panel"></div></div>
+
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text"></span>
+    </div>
+
+    <div class="narration-box" id="narration"></div>
+
+    <div class="progress-wrap">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="controls" id="controls-row"></div>
+  </div>
+</div>
+
+<script>
+// ─── shared state ───────────────────────────────────────────────────────────
+var currentDemo = 0, steps = [], idx = 0, playing = false, timer = null;
+
+
+
+// ─── a11y-dark syntax highlighter ───────────────────────────────────────────
+function highlight(code) {
+  // a11y-dark palette
+  var C = {
+    kw:     '#f92672',  // keywords: if, return, void, int, string, unsigned
+    type:   '#66d9ef',  // types: int, void, string, unsigned
+    fn:     '#a6e22e',  // function names
+    num:    '#ae81ff',  // numbers
+    str:    '#e6db74',  // string literals and char literals
+    cmt:    '#d4d0ab',  // comments
+    op:     '#f92672',  // operators
+    punc:   '#f8f8f2',  // punctuation / default
+  };
+
+  function span(color, text) {
+    return '<span style="color:' + color + '">' + esc(text) + '</span>';
+  }
+  function esc(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  var keywords = /^(if|else|return|void|int|unsigned|string|while|for|cout)$/;
+  var types     = /^(int|void|string|unsigned)$/;
+
+  // Tokenize with a series of regex passes
+  // We'll build an array of {type, text} tokens
+  var tokens = [];
+  var i = 0;
+  var src = code;
+
+  while (i < src.length) {
+    var rest = src.slice(i);
+
+    // single-line comment
+    var m = rest.match(/^\/\/.*/);
+    if (m) { tokens.push({t:'cmt', v:m[0]}); i+=m[0].length; continue; }
+
+    // string literal
+    m = rest.match(/^"(?:[^"\\]|\\.)*"/);
+    if (m) { tokens.push({t:'str', v:m[0]}); i+=m[0].length; continue; }
+
+    // char literal
+    m = rest.match(/^'(?:[^'\\]|\\.)'/);
+    if (m) { tokens.push({t:'str', v:m[0]}); i+=m[0].length; continue; }
+
+    // number
+    m = rest.match(/^\d+/);
+    if (m) { tokens.push({t:'num', v:m[0]}); i+=m[0].length; continue; }
+
+    // identifier or keyword
+    m = rest.match(/^[A-Za-z_][A-Za-z0-9_]*/);
+    if (m) {
+      var word = m[0];
+      if (types.test(word))    { tokens.push({t:'type', v:word}); }
+      else if (keywords.test(word)) { tokens.push({t:'kw',   v:word}); }
+      else                     { tokens.push({t:'id',   v:word}); }
+      i += word.length; continue;
+    }
+
+    // operators
+    m = rest.match(/^[+\-*\/%=<>!&|^~]+/);
+    if (m) { tokens.push({t:'op', v:m[0]}); i+=m[0].length; continue; }
+
+    // everything else: punctuation, spaces, parens, braces
+    tokens.push({t:'punc', v:src[i]}); i++;
+  }
+
+  // Now look back for function names: identifier immediately followed by '('
+  var out = '';
+  for (var j = 0; j < tokens.length; j++) {
+    var tok = tokens[j];
+    var nextNonSpace = null;
+    for (var k = j+1; k < tokens.length; k++) {
+      if (tokens[k].v.trim() !== '') { nextNonSpace = tokens[k]; break; }
+    }
+    if (tok.t === 'id' && nextNonSpace && nextNonSpace.v === '(') {
+      out += span(C.fn, tok.v);
+    } else if (tok.t === 'kw' || tok.t === 'type') {
+      out += span(C.kw, tok.v);
+    } else if (tok.t === 'num') {
+      out += span(C.num, tok.v);
+    } else if (tok.t === 'str') {
+      out += span(C.str, tok.v);
+    } else if (tok.t === 'cmt') {
+      out += span(C.cmt, tok.v);
+    } else if (tok.t === 'op') {
+      out += span(C.op, tok.v);
+    } else {
+      out += esc(tok.v);
+    }
+  }
+  return out;
+}
+
+
+// ─── render ─────────────────────────────────────────────────────────────────
+function render() {
+  var demo = DEMOS[currentDemo];
+  var st = steps[idx];
+
+  // code panel
+  var arrowColor = st.phase==='base'?'#aaaa00': st.phase==='return'?'#00aa00': st.phase==='output'?'#cc00cc':'#5555ff';
+  var arrowDir = st.phase==='return' ? 'up' : 'down';
+  var codeHTML = '';
+  demo.codeLines.forEach(function(line, i) {
+    var cls = 'code-line';
+    if (line.key === st.activeLine) {
+      cls += st.phase==='base'?' active-base': st.phase==='return'?' active-return': st.phase==='output'?' active-output':' active-call';
+    } else { cls += ' dim'; }
+    codeHTML += '<div class="code-row"><div class="'+cls+'">'+highlight(line.text)+'</div></div>';
+  });
+  document.getElementById('code-panel').innerHTML = codeHTML;
+
+  // trace panel
+  var traceHTML = '';
+  st.trace.forEach(function(t, i) {
+    var indent = '';
+    for (var k=0; k<t.indent; k++) indent += '  ';
+    var isLast = i===st.trace.length-1;
+    var ap = t.state==='resolved'?'return': t.state==='current'?st.phase: t.state==='output'?'output':'dim';
+    var cursor = (t.state==='current'&&isLast) ? '<span class="cursor">_</span>' : '';
+    traceHTML += '<div class="trace-row">' +
+      '<div class="trace-line '+t.state+'">'+indent+t.text+cursor+'</div>' +
+      '</div>';
+  });
+  document.getElementById('trace-panel').innerHTML = traceHTML;
+
+  // status bar
+  var dot = document.getElementById('status-dot');
+  dot.className = 'status-dot '+st.phase;
+  var statusMap = {call:'STATUS: CALLING    [descending into call stack]', base:'STATUS: BASE CASE  [recursion floor reached]', return:'STATUS: RETURNING  [ascending call stack]', output:'STATUS: OUTPUT     [printing to console]'};
+  document.getElementById('status-text').textContent = statusMap[st.phase] || '';
+
+  // narration
+  var nar = st.nar;
+  var labelMap = {call:'CALL', base:'BASE CASE', return:'RETURN', output:'OUTPUT'};
+  var mathHTML = nar.math ? '<div class="nar-math">'+nar.math+'</div>' : '';
+  document.getElementById('narration').innerHTML =
+    '<div class="nar-header">' +
+      '<span class="nar-phase-tag '+st.phase+'">'+labelMap[st.phase]+'</span>' +
+      '<span class="nar-headline">'+nar.headline+'</span>' +
+    '</div>' +
+    '<div class="nar-body">' +
+      '<div class="nar-explain">'+nar.explain+'</div>' +
+      mathHTML +
+    '</div>';
+
+  // progress
+  var pct = steps.length>1 ? Math.round((idx/(steps.length-1))*100) : 0;
+  var fill = document.getElementById('progress-fill');
+  fill.style.width = pct+'%';
+  fill.textContent = pct>12 ? pct+'%' : '';
+
+  var bp = document.getElementById('btn-prev');
+  var bn = document.getElementById('btn-next');
+  if (bp) bp.disabled = idx===0;
+  if (bn) { bn.disabled = idx===steps.length-1; bn.textContent = idx===steps.length-1 ? '= Done' : 'Next >'; }
+  if (idx===steps.length-1 && playing) stopPlay();
+}
+
+// ─── playback ────────────────────────────────────────────────────────────────
+function next() { if (idx<steps.length-1){idx++;render();} else stopPlay(); }
+function prev() { if (idx>0){idx--;render();} }
+function togglePlay() { playing ? stopPlay() : startPlay(); }
+function startPlay() {
+  if (idx===steps.length-1) idx=0;
+  playing=true;
+  var pb = document.getElementById('btn-play'); if (pb) pb.textContent='|| Pause';
+  timer=setInterval(function(){if(idx>=steps.length-1){stopPlay();return;}idx++;render();},900);
+}
+function stopPlay() {
+  playing=false; clearInterval(timer); timer=null;
+  var pb2 = document.getElementById('btn-play'); if (pb2) pb2.textContent=String.fromCharCode(9654)+' Play';
+}
+
+// ─── demo switching ──────────────────────────────────────────────────────────
+function switchDemo(i) {
+  stopPlay();
+  currentDemo = i;
+  idx = 0;
+  var demo = DEMOS[i];
+
+  // update tabs
+  document.querySelectorAll('.tab').forEach(function(t,j){ t.className='tab'+(j===i?' active':''); });
+
+  // update description
+  document.getElementById('demo-desc').innerHTML = demo.desc;
+
+  // rebuild input controls
+  var row = document.getElementById('controls-row');
+  row.innerHTML = '';
+  demo.inputs.forEach(function(inp) {
+    var lbl = document.createElement('span');
+    lbl.className='picker-label'; lbl.textContent=inp.label;
+    row.appendChild(lbl);
+    var sel = document.createElement('select');
+    sel.className='win-select'; sel.id=inp.id;
+    inp.options.forEach(function(o){
+      var opt=document.createElement('option');
+      opt.value=o.value; opt.textContent=o.text;
+      if(o.selected) opt.selected=true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', buildAndRender);
+    row.appendChild(sel);
+  });
+
+  var sp = document.createElement('div'); sp.className='spacer'; row.appendChild(sp);
+
+  // reset btn
+  var rst=document.createElement('button'); rst.className='win-btn'; rst.innerHTML='&#8635; Reset';
+  rst.onclick=function(){stopPlay();idx=0;render();};
+  row.appendChild(rst);
+
+  var prev=document.createElement('button'); prev.className='win-btn'; prev.id='btn-prev'; prev.innerHTML='&lt; Back'; prev.onclick=function(){if(idx>0){idx--;render();}};
+  row.appendChild(prev);
+
+  var play=document.createElement('button'); play.className='win-btn'; play.id='btn-play'; play.style.minWidth='70px'; play.innerHTML='&#9654; Play'; play.onclick=togglePlay;
+  row.appendChild(play);
+
+  var nxt=document.createElement('button'); nxt.className='win-btn'; nxt.id='btn-next'; nxt.innerHTML='Next &gt;'; nxt.onclick=function(){if(idx<steps.length-1){idx++;render();}else stopPlay();};
+  row.appendChild(nxt);
+
+  buildAndRender();
+}
+
+function buildAndRender() {
+  stopPlay();
+  idx=0;
+  steps = DEMOS[currentDemo].buildSteps();
+  render();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// DEMO DEFINITIONS
+// ════════════════════════════════════════════════════════════════════════════
+var DEMOS = [
+
+  // ── 1. FACTORIAL ──────────────────────────────────────────────────────────
+  {
+    label: 'factorial(n)',
+    desc: '<strong>int factorial(int n)</strong> &mdash; Classic integer recursion. Returns n! = n &times; (n-1) &times; ... &times; 1. Each call waits for the one below it before it can multiply and return.',
+    codeLines: [
+      {text:'int factorial(int n) {', key:'fn'},
+      {text:'  if (n == 0) return 1;', key:'base'},
+      {text:'  return n * factorial(n - 1);', key:'rec'},
+      {text:'}', key:'end'},
+    ],
+    inputs: [{label:'n =', id:'sel-a', options:[{value:3,text:'3'},{value:4,text:'4',selected:true},{value:5,text:'5'}]}],
+    buildSteps: function() {
+      var n = parseInt(document.getElementById('sel-a').value);
+      var s = [];
+      function fact(x){return x<=0?1:x*fact(x-1);}
+      function trace(depth, resFrom) {
+        var lines=[];
+        for(var i=0;i<=depth;i++){
+          var cn=n-i;
+          if(i===depth){
+            if(resFrom==='base') lines.push({text:'factorial(0)  =>  1',state:'resolved',indent:i});
+            else lines.push({text:'factorial('+cn+')',state:'current',indent:i});
+          } else {
+            var res = resFrom!==null && i>=resFrom;
+            lines.push({text:'factorial('+cn+')'+(res?'  =>  '+fact(cn):'  <- waiting...'),state:res?'resolved':'waiting',indent:i});
+          }
+        }
+        return lines;
+      }
+      s.push({phase:'call',activeLine:'fn',trace:[{text:'factorial('+n+')',state:'current',indent:0}],nar:{
+        headline:'Entering factorial('+n+')',
+        explain:'factorial('+n+') is called with n = '+n+'. Execution enters the function body. We\'ll check the base case first, then decide whether to recurse.',
+        math:null
+      }});
+      for(var i=0;i<=n;i++){
+        var cn=n-i;
+        if(cn>0){
+          s.push({phase:'call',activeLine:'rec',trace:trace(i,null),nar:{
+            headline:'Calling factorial('+cn+')',
+            explain: i===0
+              ? 'We call factorial('+cn+'). Since n = '+cn+' is not zero, we skip the base case and hit the recursive line. We call factorial('+(cn-1)+') and pause — we can\'t multiply yet because we don\'t have its result.'
+              : 'factorial('+cn+') is running. n = '+cn+' is not zero, so it also recurses. It calls factorial('+(cn-1)+') and pauses. Each suspended call stacks on top of the previous one.',
+            math:null
+          }});
+        } else {
+          s.push({phase:'base',activeLine:'base',trace:trace(i,'base'),nar:{
+            headline:'Base case! factorial(0) = 1',
+            explain:'n = 0, so the condition (n == 0) is true. We return 1 immediately without any further calls. This is the stopping point — now each waiting call can get the answer it was holding out for.',
+            math:'factorial(0)  =  1   (by definition)'
+          }});
+        }
+      }
+      for(var i=n-1;i>=0;i--){
+        var cn=n-i, v=fact(cn), prev=fact(cn-1);
+        s.push({phase:'return',activeLine:'rec',trace:trace(i,i),nar:{
+          headline: i===0 ? 'Final answer: '+v : 'factorial('+cn+') returns '+v,
+          explain: i===0
+            ? 'factorial('+cn+') receives '+prev+' from below. It computes '+cn+' × '+prev+' = '+v+'. No more callers are waiting — '+v+' is the final result!'
+            : 'factorial('+cn+') was waiting for factorial('+(cn-1)+'), which just returned '+prev+'. It now computes '+cn+' × '+prev+' = '+v+' and passes that up.',
+          math:'factorial('+cn+')  =  '+cn+' × '+prev+'  =  '+v
+        }});
+      }
+      return s;
+    }
+  },
+
+  // ── 2. WRITE VERTICAL ────────────────────────────────────────────────────
+  {
+    label: 'writeVertical(n)',
+    desc: '<strong>void writeVertical(int n)</strong> &mdash; Void recursion. No return value — instead it prints each digit on its own line. Notice how the recursive call happens <em>before</em> printing, so digits come out in the correct top-to-bottom order.',
+    codeLines: [
+      {text:'void writeVertical(int n) {', key:'fn'},
+      {text:'  if (n < 10) {', key:'base-check'},
+      {text:'    cout << n << \'\\n\';', key:'base-print'},
+      {text:'  } else {', key:'else'},
+      {text:'    writeVertical(n / 10);', key:'rec'},
+      {text:'    cout << n % 10 << \'\\n\';', key:'print'},
+      {text:'  }', key:'close'},
+      {text:'}', key:'end'},
+    ],
+    inputs: [{label:'n =', id:'sel-b', options:[{value:3,text:'3'},{value:12,text:'12'},{value:123,text:'123',selected:true},{value:456,text:'456'}]}],
+    buildSteps: function() {
+      var n = parseInt(document.getElementById('sel-b').value);
+      var s = [];
+      // collect digits top-to-bottom by simulating the recursion
+      var calls = [];
+      var x = n;
+      while(x >= 10){ calls.push(x); x=Math.floor(x/10); }
+      calls.push(x); // base case value (single digit)
+      // calls = [n, n/10, n/100, ..., single digit]  (top-down order)
+      var depth = calls.length; // total call frames
+
+      function trace(frameDepth, outputsSoFar, currentState) {
+        // frameDepth: how many frames are on the stack (1-indexed)
+        // outputsSoFar: array of digits already printed
+        // currentState: 'calling'|'base'|'printing'|'done'
+        var lines = [];
+        for(var i=0; i<frameDepth; i++){
+          var callVal = calls[i];
+          var isDone = (i < frameDepth-1) || currentState==='done';
+          var state;
+          if(i < frameDepth-1) state='waiting';
+          else state='current';
+          // frames that have already printed their digit are 'resolved'
+          if(outputsSoFar.length > 0){
+            // frames i where the digit has been printed
+            // digits are printed in reverse order of frames: base first, then calls[depth-2], etc.
+            var printOrder = []; // which frame indices have printed, from last to first
+            for(var j=depth-1; j>=0; j--) printOrder.push(j);
+            // first outputsSoFar.length frames in printOrder have printed
+            var printedFrames = printOrder.slice(0, outputsSoFar.length);
+            if(printedFrames.indexOf(i) >= 0) state='resolved';
+          }
+          lines.push({text:'writeVertical('+callVal+')', state:state, indent:i});
+        }
+        return lines;
+      }
+
+      // Phase 1: winding down (calling deeper)
+      s.push({phase:'call',activeLine:'fn',trace:[{text:'writeVertical('+n+')',state:'current',indent:0}],nar:{
+        headline:'Entering writeVertical('+n+')',
+        explain:'writeVertical('+n+') is called. Execution enters the function. We\'ll check whether '+n+' < 10 to decide between the base case (print directly) or the recursive branch (recurse first, then print).',
+        math:null
+      }});
+      for(var i=0; i<depth; i++){
+        var isBase = (i === depth-1);
+        if(!isBase){
+          s.push({phase:'call', activeLine:'rec', trace:trace(i+1,[],  'calling'), nar:{
+            headline: 'Calling writeVertical('+calls[i]+')',
+            explain: i===0
+              ? 'writeVertical('+calls[i]+') starts. Since '+calls[i]+' >= 10, it takes the else branch. It calls writeVertical('+calls[i+1]+') first — printing happens AFTER the recursive call returns, so digits end up in the right order.'
+              : 'writeVertical('+calls[i]+') also has '+calls[i]+' >= 10. It recurses into writeVertical('+calls[i+1]+') and suspends. The print statement is waiting — it runs only after the recursive call returns.',
+            math: null
+          }});
+        } else {
+          // base case
+          s.push({phase:'base', activeLine:'base-check', trace:trace(depth, [], 'base'), nar:{
+            headline: 'Base case! '+calls[i]+' < 10',
+            explain: 'writeVertical('+calls[i]+') sees '+calls[i]+' < 10, so this is a single digit. We skip the else branch entirely and go to the print line.',
+            math:null
+          }});
+          s.push({phase:'output', activeLine:'base-print', trace:trace(depth, [calls[i]], 'base'), nar:{
+            headline: 'Printing: '+calls[i],
+            explain: 'We print '+calls[i]+' and a newline. This is the topmost (leftmost) digit, so it goes on the screen first. writeVertical('+calls[i]+') is now done and returns to its caller.',
+            math: 'cout << '+calls[i]+' << \'\\n\'   -->  output: '+calls[i]
+          }});
+        }
+      }
+
+      // Phase 2: unwinding — each frame prints its last digit as it returns
+      var printed = [calls[depth-1]];
+      for(var i=depth-2; i>=0; i--){
+        var digit = calls[i] % 10;
+        printed.push(digit);
+        var isDone = (i===0);
+        s.push({phase:'output', activeLine:'print', trace:trace(i+1, printed, 'printing'), nar:{
+          headline: 'Printing: '+digit,
+          explain: 'writeVertical('+calls[i+1]+') has returned. Now writeVertical('+calls[i]+') runs its print statement: '+calls[i]+' % 10 = '+digit+'. It prints '+digit+(isDone?' — that\'s the last digit, we\'re done!':' and will return to its own caller.'),
+          math: calls[i]+' % 10  =  '+digit+'   -->  output: '+digit
+        }});
+      }
+
+      return s;
+    }
+  },
+
+  // ── 3. POWER ─────────────────────────────────────────────────────────────
+  {
+    label: 'power(b, e)',
+    desc: '<strong>int power(int base, int exp)</strong> &mdash; Computes base<sup>exp</sup> recursively. Each call reduces the exponent by 1. When exp reaches 0, it returns 1 (anything to the power 0 is 1), then multiplies back up.',
+    codeLines: [
+      {text:'int power(int base, int exp) {', key:'fn'},
+      {text:'  if (exp == 0) return 1;', key:'base'},
+      {text:'  return base * power(base, exp - 1);', key:'rec'},
+      {text:'}', key:'end'},
+    ],
+    inputs: [
+      {label:'base =', id:'sel-c1', options:[{value:2,text:'2',selected:true},{value:3,text:'3'},{value:5,text:'5'}]},
+      {label:'exp =',  id:'sel-c2', options:[{value:3,text:'3',selected:true},{value:4,text:'4'},{value:5,text:'5'}]},
+    ],
+    buildSteps: function() {
+      var base = parseInt(document.getElementById('sel-c1').value);
+      var exp  = parseInt(document.getElementById('sel-c2').value);
+      var s = [];
+      function pow(b,e){return e===0?1:b*pow(b,e-1);}
+      function trace(depth, resFrom) {
+        var lines=[];
+        for(var i=0;i<=depth;i++){
+          var ce=exp-i;
+          if(i===depth){
+            if(resFrom==='base') lines.push({text:'power('+base+', 0)  =>  1',state:'resolved',indent:i});
+            else lines.push({text:'power('+base+', '+ce+')',state:'current',indent:i});
+          } else {
+            var res=resFrom!==null&&i>=resFrom;
+            lines.push({text:'power('+base+', '+ce+')'+(res?'  =>  '+pow(base,ce):'  <- waiting...'),state:res?'resolved':'waiting',indent:i});
+          }
+        }
+        return lines;
+      }
+      s.push({phase:'call',activeLine:'fn',trace:[{text:'power('+base+', '+exp+')',state:'current',indent:0}],nar:{
+        headline:'Entering power('+base+', '+exp+')',
+        explain:'power('+base+', '+exp+') is called with base = '+base+' and exp = '+exp+'. Execution enters the function. We\'ll check if exp == 0 (base case) or recurse by reducing the exponent.',
+        math:null
+      }});
+      for(var i=0;i<=exp;i++){
+        var ce=exp-i;
+        if(ce>0){
+          s.push({phase:'call',activeLine:'rec',trace:trace(i,null),nar:{
+            headline:'Calling power('+base+', '+ce+')',
+            explain: i===0
+              ? 'We call power('+base+', '+ce+'). The exponent '+ce+' is not zero, so we take the recursive branch. We call power('+base+', '+(ce-1)+') and wait for its result before we can multiply.'
+              : 'power('+base+', '+ce+') is running. exp = '+ce+' is still not zero, so it recurses again with power('+base+', '+(ce-1)+'). The stack keeps growing until exp reaches 0.',
+            math:null
+          }});
+        } else {
+          s.push({phase:'base',activeLine:'base',trace:trace(i,'base'),nar:{
+            headline:'Base case! power('+base+', 0) = 1',
+            explain:'exp = 0, so the condition (exp == 0) is true. Anything raised to the power 0 equals 1. We return 1 immediately. Now each waiting frame can multiply and return.',
+            math:base+'^0  =  1   (by definition)'
+          }});
+        }
+      }
+      for(var i=exp-1;i>=0;i--){
+        var ce=exp-i, v=pow(base,ce), prev=pow(base,ce-1);
+        s.push({phase:'return',activeLine:'rec',trace:trace(i,i),nar:{
+          headline: i===0?'Final answer: '+v:'power('+base+', '+ce+') returns '+v,
+          explain: i===0
+            ? 'power('+base+', '+ce+') receives '+prev+' from the call below. It computes '+base+' × '+prev+' = '+v+'. No more callers waiting — '+v+' is '+base+'^'+exp+'!'
+            : 'power('+base+', '+ce+') was waiting for power('+base+', '+(ce-1)+'), which returned '+prev+'. It computes '+base+' × '+prev+' = '+v+' and returns that up the chain.',
+          math:'power('+base+', '+ce+')  =  '+base+' × '+prev+'  =  '+v
+        }});
+      }
+      return s;
+    }
+  },
+
+  // ── 4. FIBONACCI ─────────────────────────────────────────────────────────
+  {
+    label: 'fibonacci(n)',
+    desc: '<strong>int fibonacci(int n)</strong> &mdash; Tree recursion: each call makes <em>two</em> recursive calls. This makes the call tree branch — fibonacci(5) spawns fibonacci(4) AND fibonacci(3). Watch the stack grow and shrink as each branch is fully resolved before the next begins.',
+    codeLines: [
+      {text:'int fibonacci(int n) {', key:'fn'},
+      {text:'  if (n <= 1) return n;', key:'base'},
+      {text:'  return fibonacci(n-1)', key:'rec1'},
+      {text:'       + fibonacci(n-2);', key:'rec2'},
+      {text:'}', key:'end'},
+    ],
+    inputs: [{label:'n =', id:'sel-d', options:[{value:4,text:'4',selected:true},{value:5,text:'5'},{value:6,text:'6'}]}],
+    buildSteps: function() {
+      var N = parseInt(document.getElementById('sel-d').value);
+      var s = [];
+      function fib(n){return n<=1?n:fib(n-1)+fib(n-2);}
+
+      // Simulate the call tree with an explicit stack
+      // Each frame: {n, state:'calling1'|'called1'|'calling2'|'done', val1:null}
+      var callStack = []; // [{n, val1}]
+      var resolved = {}; // n -> value (for display purposes, keyed by call id)
+      var callId = 0;
+
+      // We'll generate steps by simulating DFS
+      var simStack = [{id:callId++, n:N, phase:'start', val1:null}];
+      var traceStack = []; // mirrors simStack for display
+
+      function makeTrace(stack, currentId, resolvedMap) {
+        return stack.map(function(f, i) {
+          var isLast = i===stack.length-1;
+          var val = resolvedMap[f.id];
+          var state;
+          if(isLast) state='current';
+          else if(val!==undefined) state='resolved';
+          else state='waiting';
+          var txt = 'fibonacci('+f.n+')';
+          if(val!==undefined) txt += '  =>  '+val;
+          else if(!isLast) txt += '  <- waiting...';
+          return {text:txt, state:state, indent:i};
+        });
+      }
+
+      // Manual simulation of fib DFS to generate steps
+      var resolvedVals = {};
+      function simulate(n, depth, parentFrames) {
+        var myId = callId++;
+        var myFrames = parentFrames.concat([{id:myId, n:n}]);
+
+        if(n <= 1) {
+          // base case
+          s.push({phase:'base', activeLine:'base', trace:makeTrace(myFrames, myId, resolvedVals), nar:{
+            headline:'Base case! fibonacci('+n+') = '+n,
+            explain: n===0
+              ? 'n = 0, which satisfies n <= 1. We return 0 immediately.'
+              : 'n = 1, which satisfies n <= 1. We return 1 immediately. No further calls needed from this branch.',
+            math:'fibonacci('+n+')  =  '+n+'   (base case)'
+          }});
+          resolvedVals[myId] = n;
+          return n;
+        }
+
+        // call fibonacci(n-1)
+        s.push({phase:'call', activeLine:'rec1', trace:makeTrace(myFrames, myId, resolvedVals), nar:{
+          headline:'Calling fibonacci('+(n-1)+') [left branch]',
+          explain: depth===0
+            ? 'fibonacci('+n+') starts. Since '+n+' > 1, it needs to compute fibonacci('+(n-1)+') + fibonacci('+(n-2)+'). It calls the left branch first: fibonacci('+(n-1)+').'
+            : 'fibonacci('+n+') needs its left branch result. It calls fibonacci('+(n-1)+') and waits. The right branch fibonacci('+(n-2)+') will be called after this one fully resolves.',
+          math:null
+        }});
+
+        var v1 = simulate(n-1, depth+1, myFrames);
+
+        // left branch returned; now announce it and call right
+        resolvedVals[myId+'_left'] = v1;
+        s.push({phase:'call', activeLine:'rec2', trace:makeTrace(myFrames, myId, resolvedVals), nar:{
+          headline:'Left branch returned '+v1+'. Now calling fibonacci('+(n-2)+')',
+          explain:'fibonacci('+(n-1)+') has finished and returned '+v1+'. Now fibonacci('+n+') calls its right branch: fibonacci('+(n-2)+'). It will add the two results once both are in.',
+          math:'Left result: fibonacci('+(n-1)+')  =  '+v1
+        }});
+
+        var v2 = simulate(n-2, depth+1, myFrames);
+        var total = v1 + v2;
+        resolvedVals[myId] = total;
+
+        s.push({phase:'return', activeLine:'rec2', trace:makeTrace(myFrames, myId, resolvedVals), nar:{
+          headline: depth===0 ? 'Final answer: fibonacci('+n+') = '+total : 'fibonacci('+n+') returns '+total,
+          explain: depth===0
+            ? 'Both branches are done. fibonacci('+(n-1)+') = '+v1+' and fibonacci('+(n-2)+') = '+v2+'. Adding them gives '+total+' — that\'s the final answer!'
+            : 'Both branches resolved: fibonacci('+(n-1)+') = '+v1+', fibonacci('+(n-2)+') = '+v2+'. Adding gives '+total+'. fibonacci('+n+') returns '+total+' to its caller.',
+          math:'fibonacci('+n+')  =  '+v1+' + '+v2+'  =  '+total
+        }});
+
+        return total;
+      }
+
+      s.push({phase:'call',activeLine:'fn',trace:[{text:'fibonacci('+N+')',state:'current',indent:0}],nar:{
+        headline:'Entering fibonacci('+N+')',
+        explain:'fibonacci('+N+') is called. This function makes TWO recursive calls — fibonacci(n-1) and fibonacci(n-2) — so the call tree branches. Watch how each branch is fully resolved before the next one starts.',
+        math:null
+      }});
+      simulate(N, 0, []);
+      return s;
+    }
+  },
+
+  // ── 5. STRING REVERSAL ───────────────────────────────────────────────────
+  {
+    label: 'reverse(s)',
+    desc: '<strong>string reverse(string s)</strong> &mdash; Recursion on a string. Each call strips the first character, reverses the rest, then appends the stripped character at the end. Simple, but a great illustration of how recursion can work on sequences.',
+    codeLines: [
+      {text:'string reverse(string s) {', key:'fn'},
+      {text:'  if (s.length() <= 1) return s;', key:'base'},
+      {text:'  return reverse(s.substr(1))', key:'rec'},
+      {text:'       + s[0];', key:'append'},
+      {text:'}', key:'end'},
+    ],
+    inputs: [{label:'s =', id:'sel-e', options:[
+      {value:'bat',text:'"bat"'},
+      {value:'hello',text:'"hello"',selected:true},
+      {value:'race',text:'"race"'},
+    ]}],
+    buildSteps: function() {
+      var input = document.getElementById('sel-e').value;
+      var s = [];
+      function rev(str){return str.length<=1?str:rev(str.slice(1))+str[0];}
+
+      var calls = []; // calls[0]=input, calls[1]=input.slice(1), ...
+      var x = input;
+      while(x.length > 1){ calls.push(x); x=x.slice(1); }
+      calls.push(x); // base: single char
+      var depth = calls.length;
+
+      function trace(frameDepth, resFrom) {
+        var lines=[];
+        for(var i=0;i<frameDepth;i++){
+          var str=calls[i];
+          if(i===frameDepth-1){
+            if(resFrom==='base') lines.push({text:'reverse("'+str+'")  =>  "'+str+'"',state:'resolved',indent:i});
+            else lines.push({text:'reverse("'+str+'")',state:'current',indent:i});
+          } else {
+            var res=resFrom!==null&&i>=resFrom;
+            lines.push({text:'reverse("'+str+'")' +(res?'  =>  "'+rev(str)+'"':'  <- waiting...'),state:res?'resolved':'waiting',indent:i});
+          }
+        }
+        return lines;
+      }
+
+      // winding
+      s.push({phase:'call',activeLine:'fn',trace:[{text:'reverse("'+input+'")',state:'current',indent:0}],nar:{
+        headline:'Entering reverse("'+input+'")',
+        explain:'reverse("'+input+'") is called. The idea: strip the first character, recursively reverse the rest, then append the stripped character at the end. We\'ll check the base case (length <= 1) first.',
+        math:null
+      }});
+      for(var i=0;i<depth;i++){
+        var str=calls[i];
+        if(str.length>1){
+          s.push({phase:'call',activeLine:'rec',trace:trace(i+1,null),nar:{
+            headline:'Calling reverse("'+str.slice(1)+'")',
+            explain: i===0
+              ? 'reverse("'+str+'") starts. The string has more than 1 character, so we recurse. We call reverse("'+str.slice(1)+'") — the string with the first character "'+str[0]+'" removed — then we\'ll append "'+str[0]+'" at the end.'
+              : 'reverse("'+str+'") strips its first character "'+str[0]+'" and calls reverse("'+str.slice(1)+'"). It will tack "'+str[0]+'" onto the result when the recursive call returns.',
+            math:null
+          }});
+        } else {
+          s.push({phase:'base',activeLine:'base',trace:trace(i+1,'base'),nar:{
+            headline:'Base case! reverse("'+str+'") = "'+str+'"',
+            explain:'The string "'+str+'" has only 1 character — there\'s nothing to reverse. We return it as-is. Now the chain of waiting calls can start appending their characters.',
+            math:'reverse("'+str+'")  =  "'+str+'"   (single char, already reversed)'
+          }});
+        }
+      }
+
+      // unwinding
+      for(var i=depth-2;i>=0;i--){
+        var str=calls[i];
+        var reversed=rev(str);
+        var prevReversed=rev(str.slice(1));
+        s.push({phase:'return',activeLine:'append',trace:trace(i+1,i),nar:{
+          headline: i===0?'Final answer: "'+reversed+'"':'reverse("'+str+'") returns "'+reversed+'"',
+          explain: i===0
+            ? 'reverse("'+str.slice(1)+'") returned "'+prevReversed+'". Appending the saved first character "'+str[0]+'" gives "'+reversed+'". That\'s the fully reversed string!'
+            : 'reverse("'+str.slice(1)+'") returned "'+prevReversed+'". Appending the saved "'+str[0]+'" gives "'+reversed+'". This result passes up to the next caller.',
+          math:'reverse("'+str+'")  =  "'+prevReversed+'" + "'+str[0]+'"  =  "'+reversed+'"'
+        }});
+      }
+      return s;
+    }
+  },
+
+]; // end DEMOS
+
+// ─── init ────────────────────────────────────────────────────────────────────
+var tabbar = document.getElementById('tabbar');
+DEMOS.forEach(function(d, i) {
+  var t = document.createElement('div');
+  t.className = 'tab' + (i===0?' active':'');
+  t.textContent = d.label;
+  t.onclick = (function(idx){ return function(){ switchDemo(idx); }; })(i);
+  tabbar.appendChild(t);
+});
+
+switchDemo(0);
+</script>
+</body>
+</html>
