@@ -16,3 +16,9 @@ The landing page ([index.html](index.html)) shows a tile for each tool with a de
 
 1. Drop the self-contained HTML file into `visualizers/`.
 2. Add an entry to the `TOOLS` array near the top of the `<script>` in `index.html` (unit, title, file path, description, demo list). The tile, embed code, and tool count are generated from that entry automatically.
+
+## Deployment
+
+GitHub Actions deploys the site to GitHub Pages on every push to `main`.
+
+In the GitHub repository, go to **Settings > Pages > Build and deployment** and set **Source** to **GitHub Actions**.
