@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C++ Inheritance Explorer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --ink: #4c5570;
+    --muted: #8089a8;
+    --paper: #fcfdff;
+    --face: #f2f7fd;
+    --soft: #eef4fc;
+    --line: #d3e0f2;
+    --line-strong: #a9c2e4;
+    --sky: #bcd4f2;
+    --sky-deep: #5b87d6;
+    --lavender: #b7a6ea;
+    --blue: #8fb3f0;
+    --mint: #93dcb2;
+    --butter: #ffd98e;
+    --code: #2c3452;
+    --code-text: #eef2fc;
+    --ok: #1f7a3f;
+    --bad: #b42318;
+    --warn: #a15c00;
+    --info: #3f65b0;
+    --shadow: 0 14px 34px rgba(86, 105, 150, 0.28);
+    --ui: "Trebuchet MS", "Segoe UI", Verdana, sans-serif;
+    --mono: "Courier New", Courier, monospace;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--ui);
+    color: var(--ink);
+    background-image:
+      radial-gradient(rgba(255,255,255,0.45) 1.2px, transparent 1.7px),
+      linear-gradient(180deg, #bfd6f8 0%, #d6e2f9 55%, #eadff4 100%);
+    background-size: 20px 20px, 100% 100%;
+    background-attachment: fixed;
+    font-size: 14px;
+  }
+  button, input, select {
+    font: inherit;
+  }
+  button, select, input {
+    border: 1px solid #b8b8b8;
+    border-radius: 6px;
+  }
+  button:focus-visible, select:focus-visible, input:focus-visible, .member-row:focus-visible {
+    outline: 3px dotted var(--lavender);
+    outline-offset: 2px;
+  }
+  .app {
+    width: min(1460px, 100%);
+    margin: 0 auto;
+    padding: 10px;
+  }
+  .window {
+    background: var(--face);
+    border: 2px solid var(--line-strong);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .title-bar {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 10px;
+    background: repeating-linear-gradient(180deg, var(--sky) 0 2px, #fff 2px 5px);
+    color: var(--ink);
+  }
+  .window-controls, .title-spacer {
+    width: 54px;
+    flex-shrink: 0;
+  }
+  .window-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .window-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .window-dot.red { background: #ff6b67; }
+  .window-dot.yellow { background: #ffd166; }
+  .window-dot.green { background: #63d471; }
+  .title {
+    flex: 1;
+    text-align: center;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .title span {
+    background: #fff;
+    padding: 1px 14px;
+    border-radius: 8px;
+  }
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+  }
+  label {
+    display: grid;
+    gap: 4px;
+    font-weight: 700;
+    color: #333;
+  }
+  .check-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+  }
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+  select, input[type="text"] {
+    min-height: 36px;
+    padding: 6px 8px;
+    background: #fff;
+  }
+  button {
+    min-height: 36px;
+    padding: 7px 12px;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 800;
+    cursor: pointer;
+  }
+  button.primary {
+    color: #fff;
+    background: var(--sky-deep);
+    border-color: #4a72bd;
+  }
+  button:disabled {
+    color: #888;
+    background: #e9e9e9;
+    cursor: default;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(360px, 0.92fr) minmax(420px, 1.08fr);
+    gap: 12px;
+    padding: 12px;
+  }
+  .stack {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+  }
+  .panel {
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .panel > h2 {
+    margin: 0;
+    padding: 7px 12px;
+    font-size: 15px;
+    color: var(--ink);
+    background: repeating-linear-gradient(180deg, var(--sky) 0 2px, #fff 2px 5px);
+    border-bottom: 1.5px solid var(--line);
+  }
+  .panel > h2 span {
+    display: inline-block;
+    background: #fff;
+    padding: 2px 14px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .panel-body {
+    padding: 12px;
+  }
+  .subtle {
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .mini-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .uml-wrap {
+    display: grid;
+    justify-items: center;
+    padding: 4px;
+  }
+  .uml-wrap svg {
+    width: min(520px, 100%);
+    height: auto;
+  }
+  .svg-member {
+    cursor: pointer;
+  }
+  .svg-member .row-bg {
+    fill: transparent;
+  }
+  .svg-member:hover .row-bg {
+    fill: #eef4ff;
+  }
+  .svg-member.selected .row-bg {
+    fill: #eef4ff;
+    stroke: var(--sky-deep);
+  }
+  .inherit-arrow {
+    stroke-dasharray: 7 5;
+    animation: dashUp 1.1s linear infinite;
+  }
+  @keyframes dashUp {
+    to { stroke-dashoffset: -24; }
+  }
+  .access-dot {
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1.5px solid;
+    flex-shrink: 0;
+  }
+  .acc-public { color: var(--ok); border-color: #98d5ac; background: #eefbf2; }
+  .acc-protected { color: var(--warn); border-color: #efc174; background: #fff8e8; }
+  .acc-private { color: var(--bad); border-color: #e9aaa4; background: #fff0ef; }
+  .tag.acc-public { color: var(--ok); border-color: #98d5ac; background: #eefbf2; }
+  .tag.acc-protected { color: var(--warn); border-color: #efc174; background: #fff8e8; }
+  .tag.acc-private { color: var(--bad); border-color: #e9aaa4; background: #fff0ef; }
+  .flow-strip {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    min-height: 54px;
+  }
+  .flow-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 2px solid var(--line-strong);
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-weight: 800;
+    max-width: 44%;
+    overflow-wrap: anywhere;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  .flow-node code { font-family: var(--mono); font-weight: 600; }
+  .flow-arrow {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    position: relative;
+    min-width: 64px;
+  }
+  .flow-arrow::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    right: 12px;
+    top: 50%;
+    border-top: 3px dashed var(--line-strong);
+    transition: border-color 0.25s ease;
+  }
+  .flow-arrow::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+    border-left: 11px solid var(--line-strong);
+    transition: border-left-color 0.25s ease;
+  }
+  .flow-badge {
+    position: relative;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 900;
+    font-size: 16px;
+    background: #fff;
+    border: 2px solid var(--line-strong);
+    color: var(--muted);
+    transition: all 0.25s ease;
+  }
+  .flow-strip.ok .flow-arrow::before { border-top-color: var(--ok); }
+  .flow-strip.ok .flow-arrow::after { border-left-color: var(--ok); }
+  .flow-strip.ok .flow-badge { color: var(--ok); border-color: var(--ok); background: #eefbf2; }
+  .flow-strip.ok .flow-node { border-color: #98d5ac; background: #f4fcf7; }
+  .flow-strip.bad .flow-arrow::before { border-top-color: var(--bad); }
+  .flow-strip.bad .flow-arrow::after { border-left-color: var(--bad); }
+  .flow-strip.bad .flow-badge { color: var(--bad); border-color: var(--bad); background: #fff0ef; }
+  .flow-strip.bad .flow-node { border-color: #e9aaa4; background: #fff7f6; }
+  .build-view {
+    border: 3px solid var(--line-strong);
+    border-radius: 10px;
+    background: var(--face);
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: border-color 0.3s ease, opacity 0.3s ease;
+  }
+  .build-view.shell-pending { border-style: dashed; opacity: 0.85; }
+  .build-view.shell-gone { border-style: dashed; opacity: 0.5; }
+  .build-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+  .build-part {
+    border: 2px solid var(--line-strong);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #fff;
+    transition: opacity 0.35s ease, border-color 0.35s ease, background 0.35s ease, filter 0.35s ease;
+  }
+  .build-part + .build-part { margin-top: 8px; }
+  .build-members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .build-chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 2px 6px;
+    background: var(--paper);
+  }
+  .build-part.pending { opacity: 0.35; border-style: dashed; }
+  .build-part.building {
+    border-color: var(--sky-deep);
+    background: #eef4ff;
+    animation: buildPulse 1.1s ease-in-out infinite;
+  }
+  .build-part.done { border-color: #98d5ac; background: #f4fcf7; }
+  .build-part.destroying {
+    border-color: #e9aaa4;
+    background: #fff0ef;
+    animation: destroyPulse 1.1s ease-in-out infinite;
+  }
+  .build-part.gone {
+    opacity: 0.18;
+    border-style: dashed;
+    filter: grayscale(1);
+  }
+  @keyframes buildPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(91, 135, 214, 0.4); }
+    50% { box-shadow: 0 0 0 9px rgba(91, 135, 214, 0); }
+  }
+  @keyframes destroyPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(180, 35, 24, 0.35); }
+    50% { box-shadow: 0 0 0 9px rgba(180, 35, 24, 0); }
+  }
+  .relationship {
+    border-left: 5px solid var(--sky-deep);
+    background: #eef4ff;
+    padding: 9px 10px;
+    line-height: 1.45;
+  }
+  .class-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .class-card h3 {
+    margin: 0;
+    padding: 8px 10px;
+    background: #eeeeee;
+    border-bottom: 1px solid var(--line);
+  }
+  .access-group {
+    padding: 8px;
+    border-bottom: 1px solid #eeeeee;
+  }
+  .access-group:last-child { border-bottom: 0; }
+  .access-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
+  }
+  .member-row {
+    width: 100%;
+    min-height: 34px;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    text-align: left;
+    font-weight: 500;
+  }
+  .member-row:hover, .member-row.selected {
+    border-color: var(--sky-deep);
+    background: #eef4ff;
+  }
+  .member-row .sig {
+    font-family: var(--mono);
+    overflow-wrap: anywhere;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #bdbdbd;
+    background: #fff;
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .tag.ok { color: var(--ok); border-color: #98d5ac; background: #eefbf2; }
+  .tag.bad { color: var(--bad); border-color: #e9aaa4; background: #fff0ef; }
+  .tag.warn { color: var(--warn); border-color: #efc174; background: #fff8e8; }
+  .tag.info { color: var(--info); border-color: #aac3ed; background: #eef4ff; }
+  .object-shell {
+    border: 3px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--face);
+  }
+  .object-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+  .subobject {
+    border: 2px dashed var(--sky-deep);
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  .derived-part {
+    border: 2px solid var(--line-strong);
+    background: var(--paper);
+    border-radius: 8px;
+    padding: 10px;
+  }
+  .object-member {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 7px;
+    margin-top: 5px;
+    border: 1px solid var(--line);
+    border-left-width: 5px;
+    border-radius: 6px;
+    background: #fff;
+    font-family: var(--mono);
+  }
+  .object-member.om-public { border-left-color: var(--ok); }
+  .object-member.om-protected { border-left-color: var(--warn); }
+  .object-member.om-private { border-left-color: var(--bad); }
+  .object-member.selected {
+    border-color: var(--sky-deep);
+    background: #eef4ff;
+    box-shadow: inset 4px 0 0 var(--sky-deep);
+  }
+  .lock {
+    color: var(--bad);
+    font-family: var(--ui);
+    font-weight: 900;
+  }
+  .access-result {
+    min-height: 82px;
+    border: 1px solid var(--line);
+    border-left-width: 6px;
+    border-radius: 8px;
+    padding: 10px;
+    background: #fff;
+    line-height: 1.45;
+  }
+  .access-result.ok { border-left-color: var(--ok); }
+  .access-result.bad { border-left-color: var(--bad); }
+  .access-result.warn { border-left-color: var(--warn); }
+  .compiler {
+    margin-top: 7px;
+    padding: 8px;
+    border-radius: 6px;
+    background: var(--code);
+    color: var(--code-text);
+    font-family: var(--mono);
+    font-size: 12px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid var(--line);
+    padding: 6px 7px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #eeeeee;
+    font-weight: 900;
+  }
+  .timeline-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .timeline {
+    display: grid;
+    gap: 7px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+    padding: 7px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+  .step.active {
+    border-color: var(--sky-deep);
+    background: #eef4ff;
+  }
+  .step-num {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #eeeeee;
+    font-weight: 900;
+  }
+  .step.active .step-num {
+    background: var(--sky-deep);
+    color: #fff;
+  }
+  .code-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .code-tabs button {
+    min-height: 32px;
+    padding: 5px 9px;
+  }
+  .code-tabs button.active {
+    color: #fff;
+    background: var(--sky-deep);
+  }
+  pre {
+    margin: 0;
+    padding: 12px;
+    background: var(--code);
+    color: var(--code-text);
+    overflow: auto;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .kw { color: #ff7b72; }
+  .ty { color: #79c0ff; }
+  .fn { color: #d2a8ff; }
+  .st { color: #a5d6ff; }
+  .cm { color: #8b949e; }
+  .pp { color: #ffa657; }
+  .num { color: #79c0ff; }
+  .challenge {
+    display: grid;
+    gap: 8px;
+  }
+  .choice-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .choice-row button.selected {
+    color: #fff;
+    background: var(--sky-deep);
+  }
+  .editor-row {
+    display: grid;
+    grid-template-columns: 86px 1fr 1fr 88px 34px;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .editor-row button {
+    min-width: 34px;
+    padding: 4px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .hidden { display: none !important; }
+  @media (max-width: 980px) {
+    .toolbar, .grid {
+      grid-template-columns: 1fr;
+    }
+    .mini-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 560px) {
+    .app { padding: 0; }
+    .window { border-left: 0; border-right: 0; }
+    .panel { border-radius: 0; }
+    .editor-row {
+      grid-template-columns: 1fr;
+    }
+    .title { font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="window">
+    <div class="title-bar">
+      <div class="window-controls" aria-hidden="true">
+        <span class="window-dot red"></span>
+        <span class="window-dot yellow"></span>
+        <span class="window-dot green"></span>
+      </div>
+      <div class="title"><span>C++ Inheritance Explorer</span></div>
+      <div class="title-spacer" aria-hidden="true"></div>
+    </div>
+
+    <form class="toolbar" id="controls">
+      <label>Preset
+        <select id="preset">
+          <option value="character">Character -> Warrior</option>
+          <option value="sensor">Sensor -> TemperatureSensor</option>
+          <option value="person">Person -> Student</option>
+          <option value="custom">Custom Scenario</option>
+        </select>
+      </label>
+      <label>Mode
+        <select id="mode">
+          <option value="guided">Guided</option>
+          <option value="explore">Explore</option>
+        </select>
+      </label>
+      <label>Inheritance
+        <select id="inheritance">
+          <option value="public">public</option>
+          <option value="protected">protected</option>
+          <option value="private">private</option>
+        </select>
+      </label>
+      <label class="check-label"><input id="advanced" type="checkbox"> Show advanced explanations</label>
+      <label class="check-label"><input id="showCode" type="checkbox" checked> Show generated code</label>
+      <button type="button" id="resetPreset" class="primary">Reset Preset</button>
+    </form>
+
+    <main class="grid">
+      <section class="stack">
+        <section class="panel" id="guidedPanel">
+          <h2><span>Guided Path</span></h2>
+          <div class="panel-body">
+            <div id="guidedText" class="relationship"></div>
+            <div class="timeline-controls" style="margin-top:10px">
+              <button type="button" id="guidedPrev">Back</button>
+              <button type="button" id="guidedNext" class="primary">Next</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="scenarioPanel">
+          <h2><span>Scenario and Class Editor</span></h2>
+          <div class="panel-body">
+            <div class="mini-grid">
+              <label>Base class
+                <input id="baseName" type="text">
+              </label>
+              <label>Derived class
+                <input id="derivedName" type="text">
+              </label>
+            </div>
+            <p id="validation" class="subtle" aria-live="polite"></p>
+            <div id="memberEditor" class="hidden"></div>
+            <div class="mini-grid" id="classCards"></div>
+            <div class="legend">
+              <span class="tag acc-public">+ public</span>
+              <span class="tag acc-protected"># protected</span>
+              <span class="tag acc-private">- private</span>
+              <span class="tag">&#128274; = exists but direct access is blocked</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="accessPanel">
+          <h2><span>Access Checker</span></h2>
+          <div class="panel-body">
+            <div class="mini-grid">
+              <label>Access location
+                <select id="accessContext">
+                  <option value="base">Inside the base class</option>
+                  <option value="derived">Inside the derived class</option>
+                  <option value="main">Inside main()</option>
+                  <option value="object">Through a derived object in main()</option>
+                </select>
+              </label>
+              <label>Member
+                <select id="memberSelect"></select>
+              </label>
+            </div>
+            <div id="accessFlow"></div>
+            <pre id="contextCode" style="margin:10px 0"></pre>
+            <button type="button" id="checkAccess" class="primary">Check Access</button>
+            <div id="accessResult" class="access-result" aria-live="polite" style="margin-top:10px"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2><span>Access Table</span></h2>
+          <div class="panel-body" style="overflow:auto">
+            <table id="accessTable"></table>
+          </div>
+        </section>
+      </section>
+
+      <section class="stack">
+        <section class="panel" id="hierarchyPanel">
+          <h2><span>Class Hierarchy</span></h2>
+          <div class="panel-body">
+            <div class="uml-wrap" id="hierarchyDiagram" aria-hidden="true"></div>
+            <p id="hierarchyText" class="visually-hidden"></p>
+            <div id="relationship" class="relationship"></div>
+            <div style="margin-top:10px">
+              <label>Is-a relationship check
+                <select id="isaCheck">
+                  <option value="yes">Yes, this is an is-a relationship.</option>
+                  <option value="has">No, this is really a has-a relationship.</option>
+                  <option value="unsure">I am not sure.</option>
+                </select>
+              </label>
+              <p id="isaFeedback" class="subtle" aria-live="polite"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="objectPanel">
+          <h2><span>Object Structure</span></h2>
+          <div class="panel-body">
+            <div class="legend" style="margin-top:0;margin-bottom:8px">
+              <label class="check-label"><input id="showPrivate" type="checkbox" checked> Show private members</label>
+              <label class="check-label"><input id="showInheritedFns" type="checkbox" checked> Show inherited functions</label>
+              <label class="check-label"><input id="showOwnership" type="checkbox" checked> Show ownership labels</label>
+              <label class="check-label"><input id="showValues" type="checkbox" checked> Show memory values</label>
+            </div>
+            <div id="objectView"></div>
+            <div id="memberExplanation" class="relationship" style="margin-top:10px"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="constructorPanel">
+          <h2><span>Constructor and Destructor Timeline</span></h2>
+          <div class="panel-body">
+            <div class="timeline-controls">
+              <button type="button" id="constructBtn" class="primary">Construct Object</button>
+              <button type="button" id="destroyBtn">Destroy Object</button>
+              <button type="button" id="stepBack">Back</button>
+              <button type="button" id="stepForward">Step</button>
+              <button type="button" id="autoPlay">Auto Play</button>
+              <button type="button" id="timelineReset">Reset</button>
+            </div>
+            <div class="relationship" id="orderSummary"></div>
+            <div id="buildView" class="build-view" style="margin-top:10px"></div>
+            <pre id="timelineCode" style="margin:10px 0"></pre>
+            <div id="timeline" class="timeline"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <section class="grid" style="padding-top:0">
+      <section class="panel" id="codePanel">
+        <h2><span>Generated C++17 Code</span></h2>
+        <div class="panel-body">
+          <div class="code-tabs" id="codeTabs"></div>
+          <div class="timeline-controls">
+            <button type="button" id="copyFile">Copy Current File</button>
+            <button type="button" id="copyAll">Copy All Files</button>
+            <button type="button" id="resetCode">Reset Code</button>
+            <span id="copyStatus" class="tag info" aria-live="polite">Ready</span>
+          </div>
+          <pre id="codeBlock"></pre>
+        </div>
+      </section>
+
+      <section class="panel" id="challengePanel">
+        <h2><span>Concept Checks</span></h2>
+        <div class="panel-body">
+          <div id="composition" class="relationship"></div>
+          <div id="challenges" class="challenge"></div>
+        </div>
+      </section>
+    </section>
+  </div>
+</div>
+
+<script>
+var accessOrder = ['public', 'protected', 'private'];
+var accessSymbol = { public: '+', protected: '#', private: '-' };
+var state = {
+  preset: 'character',
+  mode: 'guided',
+  inheritanceType: 'public',
+  baseClass: null,
+  derivedClass: null,
+  selectedMember: null,
+  accessContext: 'derived',
+  accessRevealed: false,
+  timelineMode: 'construct',
+  timelineStep: 0,
+  guidedStep: 0,
+  activeCodeFile: 0,
+  isaAnswer: 'yes',
+  showAdvanced: false,
+  showCode: true,
+  showPrivate: true,
+  showInheritedFns: true,
+  showOwnership: true,
+  showValues: true
+};
+var timer = null;
+
+var presets = {
+  character: function() {
+    return {
+      objectName: 'hero',
+      baseValueArgs: '"Rin", 100',
+      derivedValueArgs: '"Rin", 100, 25',
+      baseClass: {
+        name: 'Character',
+        role: 'base',
+        members: [
+          fn('character-ctor', 'Character', 'constructor', 'public', '', ['std::string name', 'int health = 100']),
+          fn('character-get-name', 'getName', 'function', 'public', 'const std::string&', [], true, true),
+          fn('character-get-health', 'getHealth', 'function', 'public', 'int', [], true, true),
+          fn('character-take-damage', 'takeDamage', 'function', 'public', 'void', ['int amount']),
+          data('character-name', 'name_', 'std::string', 'private', '"Rin"'),
+          data('character-health', 'health_', 'int', 'private', '100')
+        ]
+      },
+      derivedClass: {
+        name: 'Warrior',
+        role: 'derived',
+        members: [
+          fn('warrior-ctor', 'Warrior', 'constructor', 'public', '', ['std::string name', 'int health', 'int armor']),
+          fn('warrior-get-armor', 'getArmor', 'function', 'public', 'int', [], true, true),
+          fn('warrior-block', 'blockAttack', 'function', 'public', 'void', []),
+          data('warrior-armor', 'armor_', 'int', 'private', '25')
+        ]
+      }
+    };
+  },
+  sensor: function() {
+    return {
+      objectName: 'sensor',
+      baseValueArgs: '"lab-2"',
+      derivedValueArgs: '"lab-2", 72.5',
+      baseClass: {
+        name: 'Sensor',
+        role: 'base',
+        members: [
+          fn('sensor-ctor', 'Sensor', 'constructor', 'public', '', ['std::string id']),
+          fn('sensor-get-id', 'getId', 'function', 'public', 'const std::string&', [], true, true),
+          fn('sensor-active', 'isActive', 'function', 'public', 'bool', [], true, true),
+          fn('sensor-set-active', 'setActive', 'function', 'public', 'void', ['bool active'], false, true),
+          data('sensor-id', 'id_', 'std::string', 'private', '"lab-2"'),
+          data('sensor-active-data', 'active_', 'bool', 'private', 'true')
+        ]
+      },
+      derivedClass: {
+        name: 'TemperatureSensor',
+        role: 'derived',
+        members: [
+          fn('temp-ctor', 'TemperatureSensor', 'constructor', 'public', '', ['std::string id', 'double temperature']),
+          fn('temp-get', 'getTemperature', 'function', 'public', 'double', [], true, true),
+          fn('temp-set', 'setTemperature', 'function', 'public', 'void', ['double temperature'], false, true),
+          data('temp-data', 'temperature_', 'double', 'private', '72.5')
+        ]
+      }
+    };
+  },
+  person: function() {
+    return {
+      objectName: 'student',
+      baseValueArgs: '',
+      derivedValueArgs: '',
+      baseClass: {
+        name: 'Person',
+        role: 'base',
+        members: [
+          fn('person-intro', 'introduce', 'function', 'public', 'void', [], true),
+          data('person-name', 'name_', 'std::string', 'protected', '"Ari"'),
+          data('person-age', 'age_', 'int', 'private', '0')
+        ]
+      },
+      derivedClass: {
+        name: 'Student',
+        role: 'derived',
+        members: [
+          fn('student-study', 'study', 'function', 'public', 'void', [], true),
+          data('student-major', 'major_', 'std::string', 'private', '"Computer Science"')
+        ]
+      }
+    };
+  }
+};
+
+function data(id, name, type, access, value) {
+  return { id: id, name: name, displayName: name, kind: 'data', type: type, access: access, value: value };
+}
+function fn(id, name, kind, access, returnType, parameters, isConst, isNoexcept) {
+  return {
+    id: id,
+    name: name,
+    displayName: kind === 'constructor' ? name + '(' + parameters.join(', ') + ')' : name + '(' + parameters.map(function(p){ return p.split(' ')[0]; }).join(', ') + ')',
+    kind: kind,
+    returnType: returnType || '',
+    parameters: parameters || [],
+    access: access,
+    isConst: !!isConst,
+    isNoexcept: !!isNoexcept
+  };
+}
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+function initFromPreset(name) {
+  var base = clone((presets[name] || presets.character)());
+  state.preset = presets[name] ? name : 'character';
+  state.baseClass = base.baseClass;
+  state.derivedClass = base.derivedClass;
+  state.objectName = base.objectName;
+  state.baseValueArgs = base.baseValueArgs;
+  state.derivedValueArgs = base.derivedValueArgs;
+  state.selectedMember = firstSelectable().id;
+  state.timelineStep = 0;
+  state.timelineMode = 'construct';
+  state.isaAnswer = 'yes';
+  state.accessRevealed = false;
+  stopTimer();
+}
+
+function allMembers(includeConstructors) {
+  return state.baseClass.members.concat(state.derivedClass.members).filter(function(m) {
+    return includeConstructors || m.kind !== 'constructor';
+  });
+}
+function memberOwner(member) {
+  return state.baseClass.members.some(function(m) { return m.id === member.id; }) ? state.baseClass : state.derivedClass;
+}
+function firstSelectable() {
+  return allMembers(false)[0] || state.baseClass.members[0];
+}
+function selectedMember() {
+  return allMembers(true).find(function(m) { return m.id === state.selectedMember; }) || firstSelectable();
+}
+function isBaseMember(member) {
+  return memberOwner(member).role === 'base';
+}
+function effectiveBaseAccess(member) {
+  if (member.access === 'private') return 'inaccessible';
+  if (state.inheritanceType === 'public') return member.access;
+  if (state.inheritanceType === 'protected') return 'protected';
+  return 'private';
+}
+function canAccess(member, context) {
+  var owner = memberOwner(member);
+  if (context === 'base') {
+    return owner.role === 'base';
+  }
+  if (context === 'derived') {
+    if (owner.role === 'derived') return true;
+    return member.access === 'public' || member.access === 'protected';
+  }
+  var visibleAccess = owner.role === 'base' ? effectiveBaseAccess(member) : member.access;
+  return visibleAccess === 'public';
+}
+function accessReason(member, context) {
+  var owner = memberOwner(member);
+  var allowed = canAccess(member, context);
+  var declared = member.access + ' member of ' + owner.name;
+  var expression = expressionFor(member, context);
+  var compiler = '';
+  var text = '';
+  if (allowed) {
+    text = 'Allowed. ' + code(member.displayName) + ' is a ' + declared + '. ';
+    if (owner.role === 'base' && (context === 'main' || context === 'object')) {
+      text += 'Through ' + state.inheritanceType + ' inheritance it is visible as ' + effectiveBaseAccess(member) + ' in ' + state.derivedClass.name + '.';
+    } else if (context === 'derived' && owner.role === 'base') {
+      text += state.derivedClass.name + ' member functions may directly use inherited public and protected base members.';
+    } else {
+      text += 'This context is allowed to use that member directly.';
+    }
+  } else {
+    text = 'Not allowed. ' + code(member.displayName) + ' is a ' + declared + '. ';
+    if (owner.role === 'base' && member.access === 'private' && context === 'derived') {
+      text += state.derivedClass.name + ' objects still contain this member, but derived member functions cannot access private base members directly.';
+    } else if (owner.role === 'base' && (context === 'main' || context === 'object')) {
+      text += 'From main(), only public members of the derived object are directly accessible. Here the inherited member is ' + effectiveBaseAccess(member) + '.';
+    } else if (owner.role === 'derived' && context === 'base') {
+      text += state.baseClass.name + ' member functions do not get special access to members declared later in ' + state.derivedClass.name + '.';
+    } else {
+      text += 'This access location does not have permission to use it directly.';
+    }
+    compiler = "error: '" + memberSignature(member, owner, true) + "' is " + member.access + " within this context";
+  }
+  return { allowed: allowed, text: text, compiler: compiler, expression: expression };
+}
+function expressionFor(member, context) {
+  if (context === 'main' || context === 'object') return state.objectName + '.' + member.displayName;
+  return member.displayName;
+}
+function memberSignature(member, owner, includeClass) {
+  var prefix = includeClass ? owner.name + '::' : '';
+  if (member.kind === 'data') return member.type + ' ' + prefix + member.name;
+  if (member.kind === 'constructor') return prefix + member.name + '(' + member.parameters.join(', ') + ')';
+  return member.returnType + ' ' + prefix + member.name + '(' + member.parameters.join(', ') + ')';
+}
+function code(t) {
+  return '`' + t + '`';
+}
+function esc(text) {
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function idOk(name) {
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(name);
+}
+
+function render() {
+  validateState();
+  renderControls();
+  renderGuided();
+  renderHierarchy();
+  renderClassCards();
+  renderMemberEditor();
+  renderObject();
+  renderAccessChecker(false);
+  renderAccessTable();
+  renderTimeline();
+  renderCode();
+  renderChallenges();
+}
+function validateState() {
+  if (!state.selectedMember || !allMembers(true).some(function(m) { return m.id === state.selectedMember; })) {
+    state.selectedMember = firstSelectable().id;
+  }
+  if (!accessOrder.includes(state.inheritanceType)) state.inheritanceType = 'public';
+}
+function renderControls() {
+  setValue('preset', state.preset);
+  setValue('mode', state.mode);
+  setValue('inheritance', state.inheritanceType);
+  setChecked('advanced', state.showAdvanced);
+  setChecked('showCode', state.showCode);
+  setValue('baseName', state.baseClass.name);
+  setValue('derivedName', state.derivedClass.name);
+  byId('memberEditor').classList.toggle('hidden', state.preset !== 'custom');
+  byId('guidedPanel').classList.toggle('hidden', state.mode !== 'guided');
+  byId('codePanel').classList.toggle('hidden', !state.showCode);
+  var message = '';
+  if (!idOk(state.baseClass.name)) message = 'Class names must be valid C++ identifiers. Try a name like Character or TemperatureSensor.';
+  else if (!idOk(state.derivedClass.name)) message = 'Class names must be valid C++ identifiers. Try a name like Warrior or TemperatureSensor.';
+  else if (state.baseClass.name === state.derivedClass.name) message = 'Base and derived class names must be different.';
+  byId('validation').textContent = message || 'Editing a class name updates every diagram, access rule, and generated file.';
+}
+function renderGuided() {
+  var steps = [
+    'Step 1 of 7: Identify the base class, the derived class, and the inheritance label.',
+    'Step 2 of 7: Inspect the derived object. Notice the ' + state.baseClass.name + ' base-class subobject inside the complete ' + state.derivedClass.name + ' object.',
+    'Step 3 of 7: Select an inherited public function and check whether ' + state.derivedClass.name + ' may use it.',
+    'Step 4 of 7: Select a private base data member. It exists in the object, but direct derived access is blocked.',
+    'Step 5 of 7: Construct the object. The base constructor runs before the derived constructor.',
+    'Step 6 of 7: Destroy the object. The derived destructor runs before the base destructor.',
+    'Step 7 of 7: Try the concept checks and compare is-a inheritance with has-a composition.'
+  ];
+  byId('guidedText').textContent = steps[state.guidedStep];
+  byId('guidedPrev').disabled = state.guidedStep === 0;
+  byId('guidedNext').disabled = state.guidedStep === steps.length - 1;
+}
+function nonCtor(m) {
+  return m.kind !== 'constructor';
+}
+function accColor(access) {
+  if (access === 'public') return { ink: '#1f7a3f', bg: '#eefbf2', line: '#98d5ac' };
+  if (access === 'protected') return { ink: '#a15c00', bg: '#fff8e8', line: '#efc174' };
+  if (access === 'private') return { ink: '#b42318', bg: '#fff0ef', line: '#e9aaa4' };
+  return { ink: '#8089a8', bg: '#f0f1f6', line: '#c5c9d6' };
+}
+function truncate(text, max) {
+  return text.length > max ? text.slice(0, max - 1) + '…' : text;
+}
+function hierarchySvg() {
+  var W = 520, boxW = 360, boxX = (W - boxW) / 2, cx = W / 2;
+  var rowH = 22, headH = 30, pad = 6, sectH = 20, gap = 84;
+  var baseMs = state.baseClass.members.filter(nonCtor);
+  var derivedMs = state.derivedClass.members.filter(nonCtor);
+  var baseH = headH + pad + baseMs.length * rowH + pad;
+  var derivedH = headH + pad + derivedMs.length * rowH + sectH + baseMs.length * rowH + pad;
+  var baseY = 10;
+  var derivedY = baseY + baseH + gap;
+  var H = derivedY + derivedH + 10;
+  var inhColor = accColor(state.inheritanceType).ink;
+  var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+  s += '<path class="inherit-arrow" d="M ' + cx + ' ' + derivedY + ' L ' + cx + ' ' + (baseY + baseH + 16) + '" stroke="' + inhColor + '" stroke-width="3" fill="none"/>';
+  s += '<path d="M ' + cx + ' ' + (baseY + baseH + 1) + ' l -10 16 h 20 z" fill="#ffffff" stroke="' + inhColor + '" stroke-width="2.5"/>';
+  var label = state.inheritanceType + ' inheritance';
+  var labelY = baseY + baseH + gap / 2;
+  var lw = label.length * 7.4 + 20;
+  s += '<rect x="' + (cx + 12) + '" y="' + (labelY - 13) + '" width="' + lw + '" height="26" rx="13" fill="#ffffff" stroke="' + inhColor + '" stroke-width="1.5"/>';
+  s += '<text x="' + (cx + 22) + '" y="' + (labelY + 4.5) + '" font-size="12" font-weight="800" fill="' + inhColor + '">' + esc(label) + '</text>';
+  s += classBoxSvg(state.baseClass, boxX, baseY, boxW, baseMs, null);
+  s += classBoxSvg(state.derivedClass, boxX, derivedY, boxW, derivedMs, baseMs);
+  return s + '</svg>';
+}
+function classBoxSvg(cls, x, y, w, ownMembers, inheritedMembers) {
+  var rowH = 22, headH = 30, pad = 6, sectH = 20;
+  var h = headH + pad + ownMembers.length * rowH + (inheritedMembers ? sectH + inheritedMembers.length * rowH : 0) + pad;
+  var s = '<g>';
+  s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="10" fill="#ffffff" stroke="#a9c2e4" stroke-width="2"/>';
+  s += '<path d="M ' + x + ' ' + (y + headH) + ' h ' + w + '" stroke="#d3e0f2" stroke-width="1.5"/>';
+  s += '<text x="' + (x + 12) + '" y="' + (y + 20.5) + '" font-size="15" font-weight="800" fill="#4c5570">' + esc(truncate(cls.name, 26)) + '</text>';
+  s += '<text x="' + (x + w - 12) + '" y="' + (y + 20) + '" text-anchor="end" font-size="10" font-weight="800" letter-spacing="1" fill="#8089a8">' + cls.role.toUpperCase() + '</text>';
+  var yy = y + headH + pad;
+  ownMembers.forEach(function(m) {
+    s += svgMemberRow(m, x, yy, w, m.access, '');
+    yy += rowH;
+  });
+  if (inheritedMembers) {
+    s += '<text x="' + (x + 12) + '" y="' + (yy + 13) + '" font-size="9.5" font-weight="900" letter-spacing="1" fill="#8089a8">INHERITED FROM ' + esc(truncate(state.baseClass.name, 22).toUpperCase()) + '</text>';
+    yy += sectH;
+    inheritedMembers.forEach(function(m) {
+      var eff = effectiveBaseAccess(m);
+      s += svgMemberRow(m, x, yy, w, eff, eff === 'inaccessible' ? '🔒 hidden' : 'as ' + eff);
+      yy += rowH;
+    });
+  }
+  return s + '</g>';
+}
+function svgMemberRow(m, boxX, y, w, access, note) {
+  var blocked = access === 'inaccessible';
+  var c = accColor(access);
+  var selected = m.id === state.selectedMember ? ' selected' : '';
+  var s = '<g class="svg-member' + selected + '" data-member="' + esc(m.id) + '">';
+  s += '<rect class="row-bg" x="' + (boxX + 5) + '" y="' + y + '" width="' + (w - 10) + '" height="20" rx="5" stroke="transparent" stroke-width="1.5"/>';
+  s += '<circle cx="' + (boxX + 19) + '" cy="' + (y + 10) + '" r="7.5" fill="' + c.bg + '" stroke="' + c.line + '" stroke-width="1.5"/>';
+  s += '<text x="' + (boxX + 19) + '" y="' + (y + 13.5) + '" text-anchor="middle" font-size="10" font-weight="900" fill="' + c.ink + '">' + (blocked ? '×' : accessSymbol[access]) + '</text>';
+  s += '<text x="' + (boxX + 33) + '" y="' + (y + 14) + '" font-size="11.5" font-family="Courier New, monospace" fill="' + (blocked ? '#8089a8' : '#4c5570') + '">' + esc(truncate(m.displayName, 34)) + '</text>';
+  if (note) {
+    s += '<text x="' + (boxX + w - 12) + '" y="' + (y + 13.5) + '" text-anchor="end" font-size="9.5" font-weight="800" fill="' + c.ink + '">' + esc(note) + '</text>';
+  }
+  return s + '</g>';
+}
+function renderHierarchy() {
+  byId('hierarchyDiagram').innerHTML = hierarchySvg();
+  var isa = 'A ' + state.derivedClass.name + ' is a ' + state.baseClass.name + '.';
+  byId('hierarchyText').textContent = state.derivedClass.name + ' inherits from ' + state.baseClass.name + ' using ' + state.inheritanceType + ' inheritance.';
+  byId('relationship').innerHTML = '<strong>' + esc(isa) + '</strong><br>' + relationshipText();
+  setValue('isaCheck', state.isaAnswer);
+  var feedback = {
+    yes: 'Yes. Public inheritance is the clearest way to model an is-a relationship. Protected or private inheritance changes public usability and is less common for beginner designs.',
+    has: 'If the relationship is has-a, composition is usually a better design than inheritance.',
+    unsure: 'Ask: can every ' + state.derivedClass.name + ' be used wherever a ' + state.baseClass.name + ' is expected conceptually? If yes, inheritance may fit.'
+  };
+  byId('isaFeedback').textContent = feedback[state.isaAnswer];
+}
+function relationshipText() {
+  if (state.inheritanceType === 'public') return 'Public inheritance preserves the public interface of the base class.';
+  if (state.inheritanceType === 'protected') return 'Protected inheritance turns inherited public access into protected access outside the hierarchy.';
+  return 'Private inheritance turns inherited public and protected access into private implementation details of the derived class.';
+}
+function renderClassCards() {
+  byId('classCards').innerHTML = [classCard(state.baseClass), classCard(state.derivedClass)].join('');
+}
+function classCard(cls) {
+  var html = '<div class="class-card"><h3>' + esc(cls.name) + ' <span class="tag info">' + cls.role + '</span></h3>';
+  accessOrder.forEach(function(level) {
+    var rows = cls.members.filter(function(m) { return m.access === level && m.kind !== 'constructor'; });
+    if (!rows.length) return;
+    html += '<div class="access-group"><div class="access-label">' + level.toUpperCase() + '</div>';
+    rows.forEach(function(m) {
+      html += memberButton(m, cls);
+    });
+    html += '</div>';
+  });
+  return html + '</div>';
+}
+function memberButton(m, cls) {
+  var selected = m.id === state.selectedMember ? ' selected' : '';
+  return '<button type="button" class="member-row' + selected + '" data-member="' + esc(m.id) + '">' +
+    '<span class="access-dot acc-' + m.access + '">' + accessSymbol[m.access] + '</span>' +
+    '<span class="sig">' + esc(displaySignature(m)) + '</span>' +
+    '<span class="tag">' + esc(cls.name) + '</span>' +
+    '</button>';
+}
+function displaySignature(m) {
+  if (m.kind === 'data') return m.name + ' : ' + m.type;
+  return m.displayName + ' : ' + m.returnType;
+}
+function renderMemberEditor() {
+  if (state.preset !== 'custom') return;
+  byId('memberEditor').innerHTML =
+    '<h3>Custom Members</h3>' +
+    editClass(state.baseClass) +
+    editClass(state.derivedClass);
+}
+function editClass(cls) {
+  var html = '<div class="class-card" style="margin:8px 0"><h3>Edit ' + esc(cls.name) + '</h3><div class="panel-body">';
+  cls.members.filter(function(m){ return m.kind !== 'constructor'; }).forEach(function(m) {
+    html += '<div class="editor-row" data-edit="' + esc(m.id) + '">' +
+      '<select data-field="access"><option value="public">public</option><option value="protected">protected</option><option value="private">private</option></select>' +
+      '<input data-field="type" value="' + esc(m.kind === 'data' ? m.type : m.returnType) + '" aria-label="member type">' +
+      '<input data-field="name" value="' + esc(m.name) + '" aria-label="member name">' +
+      '<select data-field="kind"><option value="data">data</option><option value="function">function</option></select>' +
+      '<button type="button" data-remove="' + esc(m.id) + '" aria-label="Remove member">x</button>' +
+    '</div>';
+  });
+  html += '<button type="button" data-add="' + cls.role + '">Add ' + cls.role + ' member</button></div></div>';
+  return html;
+}
+function syncEditorSelects() {
+  document.querySelectorAll('[data-edit]').forEach(function(row) {
+    var member = allMembers(true).find(function(m) { return m.id === row.dataset.edit; });
+    if (!member) return;
+    row.querySelector('[data-field="access"]').value = member.access;
+    row.querySelector('[data-field="kind"]').value = member.kind === 'function' ? 'function' : 'data';
+  });
+}
+function renderObject() {
+  setChecked('showPrivate', state.showPrivate);
+  setChecked('showInheritedFns', state.showInheritedFns);
+  setChecked('showOwnership', state.showOwnership);
+  setChecked('showValues', state.showValues);
+  var baseData = visibleObjectMembers(state.baseClass);
+  var derivedData = visibleObjectMembers(state.derivedClass);
+  var html = '<div class="object-shell"><div class="object-title"><span>' + esc(state.derivedClass.name) + ' Object: ' + esc(state.objectName || 'object') + '</span><span class="tag warn">complete object</span></div>' +
+    '<div class="subobject"><strong>' + esc(state.baseClass.name) + ' Base-Class Subobject</strong>' +
+    baseData.map(objectMember).join('') +
+    '</div>' +
+    '<div class="derived-part"><strong>' + esc(state.derivedClass.name) + ' Members</strong>' +
+    derivedData.map(objectMember).join('') +
+    '</div></div>';
+  byId('objectView').innerHTML = html;
+  var m = selectedMember();
+  var owner = memberOwner(m);
+  var privateBase = owner.role === 'base' && m.access === 'private';
+  var explanation = code(m.displayName) + ' belongs to ' + owner.name + '. ';
+  if (privateBase) explanation += 'It exists inside every ' + state.derivedClass.name + ' object, but ' + state.derivedClass.name + ' cannot access it directly because it is private in ' + state.baseClass.name + '.';
+  else if (owner.role === 'base') explanation += 'It is inherited from the base-class subobject. Its outside visibility through ' + state.derivedClass.name + ' is ' + effectiveBaseAccess(m) + '.';
+  else explanation += 'It is declared directly in the derived part of the object.';
+  byId('memberExplanation').innerHTML = explanation;
+}
+function visibleObjectMembers(cls) {
+  return cls.members.filter(function(m) {
+    if (m.kind === 'constructor') return false;
+    if (m.access === 'private' && !state.showPrivate) return false;
+    if (m.kind === 'function' && cls.role === 'base' && !state.showInheritedFns) return false;
+    return true;
+  });
+}
+function objectMember(m) {
+  var owner = memberOwner(m);
+  var selected = m.id === state.selectedMember ? ' selected' : '';
+  var label = m.kind === 'data' ? m.name : m.displayName;
+  var detail = m.kind === 'data' && state.showValues ? m.value : m.kind;
+  var lock = m.access === 'private' ? '<span class="lock" title="private: direct access blocked">&#128274;</span> ' : '';
+  var own = state.showOwnership ? '<span class="tag">' + esc(owner.name) + '</span>' : '';
+  return '<button type="button" class="object-member om-' + m.access + selected + '" data-member="' + esc(m.id) + '"><span>' + lock + esc(label) + '</span><span>' + esc(detail || '') + ' ' + own + '</span></button>';
+}
+function renderAccessChecker(showChecked) {
+  setValue('accessContext', state.accessContext);
+  var options = allMembers(false).map(function(m) {
+    return '<option value="' + esc(m.id) + '">' + esc(memberOwner(m).name + '::' + m.displayName) + '</option>';
+  }).join('');
+  byId('memberSelect').innerHTML = options;
+  setValue('memberSelect', state.selectedMember);
+  var m = selectedMember();
+  byId('contextCode').innerHTML = highlight(contextSnippet(m));
+  var result = accessReason(m, state.accessContext);
+  renderAccessFlow(m, result);
+  if (showChecked) {
+    byId('accessResult').className = 'access-result ' + (result.allowed ? 'ok' : 'bad');
+    byId('accessResult').innerHTML = '<strong>' + (result.allowed ? 'Allowed' : 'Not allowed') + ':</strong> ' + esc(result.text).replace(/`([^`]+)`/g, '<code>$1</code>') +
+      (result.compiler ? '<div class="compiler">' + esc(result.compiler) + '</div>' : '');
+  } else if (!state.accessRevealed) {
+    byId('accessResult').className = 'access-result';
+    byId('accessResult').innerHTML = '<strong>Make a prediction:</strong> will this access compile? Press <em>Check Access</em> to light up the path above.';
+  }
+}
+function renderAccessFlow(m, result) {
+  var contextLabels = {
+    base: 'inside ' + state.baseClass.name,
+    derived: 'inside ' + state.derivedClass.name,
+    main: 'main()',
+    object: (state.objectName || 'object') + ' in main()'
+  };
+  var revealed = state.accessRevealed;
+  var stripClass = revealed ? (result.allowed ? 'ok' : 'bad') : '';
+  var badge = revealed ? (result.allowed ? '✓' : '✗') : '?';
+  var owner = memberOwner(m);
+  byId('accessFlow').innerHTML =
+    '<div class="flow-strip ' + stripClass + '">' +
+      '<span class="flow-node">' + esc(contextLabels[state.accessContext]) + '</span>' +
+      '<span class="flow-arrow"><span class="flow-badge">' + badge + '</span></span>' +
+      '<span class="flow-node"><span class="access-dot acc-' + m.access + '">' + accessSymbol[m.access] + '</span><code>' + esc(truncate(owner.name + '::' + m.displayName, 34)) + '</code></span>' +
+    '</div>';
+}
+function contextSnippet(m) {
+  var expr = expressionFor(m, state.accessContext);
+  if (state.accessContext === 'base') return 'void ' + state.baseClass.name + '::example() {\n    ' + expr + '; // test access here\n}';
+  if (state.accessContext === 'derived') return 'void ' + state.derivedClass.name + '::example() {\n    ' + expr + '; // test access here\n}';
+  return 'int main() {\n    ' + state.derivedClass.name + ' ' + (state.objectName || 'object') + '(' + (state.derivedValueArgs || '') + ');\n    ' + expr + '; // test access here\n}';
+}
+function renderAccessTable() {
+  var html = '<thead><tr><th>Member</th><th>Declared In</th><th>Declared Access</th><th>Inside Base</th><th>Inside Derived</th><th>In main()</th></tr></thead><tbody>';
+  allMembers(false).forEach(function(m) {
+    var owner = memberOwner(m);
+    html += '<tr><td><code>' + esc(m.displayName) + '</code></td><td>' + esc(owner.name) + '</td><td><span class="tag acc-' + m.access + '">' + accessSymbol[m.access] + ' ' + esc(m.access) + '</span></td>' +
+      accessCell(canAccess(m, 'base')) + accessCell(canAccess(m, 'derived')) + accessCell(canAccess(m, 'main')) + '</tr>';
+  });
+  byId('accessTable').innerHTML = html + '</tbody>';
+}
+function accessCell(ok) {
+  return '<td><span class="tag ' + (ok ? 'ok' : 'bad') + '">' + (ok ? 'Yes' : 'No') + '</span></td>';
+}
+function timelineSteps() {
+  var baseData = state.baseClass.members.filter(function(m) { return m.kind === 'data'; });
+  var derivedData = state.derivedClass.members.filter(function(m) { return m.kind === 'data'; });
+  if (state.timelineMode === 'destroy') {
+    return [
+      step(state.derivedClass.name, '~' + state.derivedClass.name + '()', 'The derived destructor runs first.'),
+      step(state.derivedClass.name, 'destroy derived members', derivedData.map(function(m){ return m.name; }).join(', ') + ' are destroyed.'),
+      step(state.baseClass.name, '~' + state.baseClass.name + '()', 'Then the base destructor runs.'),
+      step(state.baseClass.name, 'destroy base subobject', baseData.map(function(m){ return m.name; }).join(', ') + ' are destroyed.'),
+      step('lifetime', 'end', 'The complete object lifetime has ended.')
+    ];
+  }
+  return [
+    step('storage', 'prepare object storage', 'Storage for the complete ' + state.derivedClass.name + ' object is prepared.'),
+    step(state.baseClass.name, state.baseClass.name + ' constructor', 'The base-class constructor executes first.'),
+    step(state.baseClass.name, 'initialize base members', baseData.map(function(m){ return m.name + ' = ' + m.value; }).join(', ')),
+    step(state.derivedClass.name, state.derivedClass.name + ' constructor', 'The derived constructor executes after the base portion is valid.'),
+    step(state.derivedClass.name, 'initialize derived members', derivedData.map(function(m){ return m.name + ' = ' + m.value; }).join(', ')),
+    step('ready', 'complete object ready', 'Construction is complete. The object can now be used.')
+  ];
+}
+function step(cls, fnName, text) {
+  return { cls: cls, fnName: fnName, text: text };
+}
+function renderBuildView() {
+  var i = state.timelineStep;
+  var baseState, derivedState, shell = '', status;
+  if (state.timelineMode === 'construct') {
+    baseState = i < 1 ? 'pending' : i <= 2 ? 'building' : 'done';
+    derivedState = i < 3 ? 'pending' : i <= 4 ? 'building' : 'done';
+    shell = i === 0 ? ' shell-pending' : '';
+    status = i === 0 ? 'preparing storage' : i <= 2 ? 'constructing base part…' : i <= 4 ? 'constructing derived part…' : 'object ready';
+  } else {
+    derivedState = i <= 1 ? 'destroying' : 'gone';
+    baseState = i < 2 ? 'done' : i <= 3 ? 'destroying' : 'gone';
+    shell = i === 4 ? ' shell-gone' : '';
+    status = i <= 1 ? 'destroying derived part…' : i <= 3 ? 'destroying base part…' : 'lifetime ended';
+  }
+  byId('buildView').className = 'build-view' + shell;
+  byId('buildView').innerHTML =
+    '<div class="build-title"><span>' + esc(state.derivedClass.name + ' ' + (state.objectName || 'object')) + '</span><span class="tag info">' + esc(status) + '</span></div>' +
+    buildPart(state.baseClass, baseState, state.baseClass.name + ' base-class subobject') +
+    buildPart(state.derivedClass, derivedState, state.derivedClass.name + ' members');
+}
+function buildPart(cls, partState, title) {
+  var chips = cls.members.filter(function(m) { return m.kind === 'data'; }).map(function(m) {
+    var value = partState === 'pending' ? '?' : m.value;
+    return '<span class="build-chip">' + esc(m.name + ' = ' + value) + '</span>';
+  }).join('');
+  return '<div class="build-part ' + partState + '"><strong>' + esc(title) + '</strong><div class="build-members">' + (chips || '<span class="build-chip">(no data members)</span>') + '</div></div>';
+}
+function renderTimeline() {
+  var steps = timelineSteps();
+  if (state.timelineStep >= steps.length) state.timelineStep = steps.length - 1;
+  renderBuildView();
+  byId('orderSummary').innerHTML = '<strong>Construction:</strong> ' + esc(state.baseClass.name + ' -> ' + state.derivedClass.name) + '<br><strong>Destruction:</strong> ' + esc(state.derivedClass.name + ' -> ' + state.baseClass.name);
+  byId('timelineCode').innerHTML = highlight(timelineCode());
+  byId('timeline').innerHTML = steps.map(function(s, i) {
+    return '<div class="step' + (i === state.timelineStep ? ' active' : '') + '"><div class="step-num">' + (i + 1) + '</div><div><strong>' + esc(s.cls + ': ' + s.fnName) + '</strong><br>' + esc(s.text) + '</div></div>';
+  }).join('');
+  byId('stepBack').disabled = state.timelineStep === 0;
+  byId('stepForward').disabled = state.timelineStep === steps.length - 1;
+}
+function timelineCode() {
+  var d = state.derivedClass.name;
+  var b = state.baseClass.name;
+  var dData = state.derivedClass.members.find(function(m){ return m.kind === 'data'; });
+  var paramNames = constructorParams(state.derivedClass).map(paramName);
+  var derivedInit = dData ? dData.name + '(' + (paramNames[paramNames.length - 1] || valueForType(dData.type)) + ')' : '';
+  return d + '::' + d + '(' + constructorParams(state.derivedClass).join(', ') + ')\n' +
+    '    : ' + b + '(' + baseCtorForwardArgs().join(', ') + ')' + (derivedInit ? ',\n      ' + derivedInit : '') + ' {\n}\n\n' +
+    '// Base constructors run before derived constructors.\n// Destructors run in the reverse order.';
+}
+function constructorParams(cls) {
+  var ctor = cls.members.find(function(m) { return m.kind === 'constructor'; });
+  if (ctor) return ctor.parameters;
+  return cls.members.filter(function(m){ return m.kind === 'data'; }).map(function(m){ return m.type + ' ' + cleanParam(m.name); });
+}
+function baseCtorForwardArgs() {
+  var params = constructorParams(state.baseClass);
+  if (!params.length) return [];
+  return params.map(function(p) {
+    var name = paramName(p);
+    if (name === 'name' || name === 'id') return 'std::move(' + name + ')';
+    return name;
+  });
+}
+function paramName(param) {
+  return param.replace(/=.*/, '').trim().split(/\s+/).pop().replace(/[,&*]/g, '').trim();
+}
+function renderCode() {
+  var files = generatedFiles();
+  if (state.activeCodeFile >= files.length) state.activeCodeFile = 0;
+  byId('codeTabs').innerHTML = files.map(function(f, i) {
+    return '<button type="button" class="' + (i === state.activeCodeFile ? 'active' : '') + '" data-code-tab="' + i + '">' + esc(f.name) + '</button>';
+  }).join('');
+  byId('codeBlock').innerHTML = highlight(files[state.activeCodeFile].content);
+}
+function generatedFiles() {
+  var b = state.baseClass;
+  var d = state.derivedClass;
+  return [
+    { name: b.name + '.h', content: classHeader(b, []) },
+    { name: b.name + '.cpp', content: classImpl(b, null) },
+    { name: d.name + '.h', content: classHeader(d, [b.name + '.h']) },
+    { name: d.name + '.cpp', content: classImpl(d, b) },
+    { name: 'main.cpp', content: mainFile() }
+  ];
+}
+function classHeader(cls, includes) {
+  var guard = cls.name.toUpperCase() + '_H';
+  var needsString = cls.members.some(function(m) { return (m.type || m.returnType || m.parameters.join(' ')).includes('string'); });
+  var out = '#ifndef ' + guard + '\n#define ' + guard + '\n\n';
+  if (needsString) out += '#include <string>\n';
+  includes.forEach(function(i) { out += '#include "' + i + '"\n'; });
+  if (needsString || includes.length) out += '\n';
+  out += 'class ' + cls.name;
+  if (cls.role === 'derived') out += ' : ' + state.inheritanceType + ' ' + state.baseClass.name;
+  out += ' {\n';
+  accessOrder.forEach(function(level) {
+    var rows = cls.members.filter(function(m) { return m.access === level; });
+    if (!rows.length) return;
+    out += level + ':\n';
+    rows.forEach(function(m) { out += '    ' + declaration(m) + '\n'; });
+    out += '\n';
+  });
+  return out.replace(/\n\n}$/, '\n}') + '};\n\n#endif\n';
+}
+function declaration(m) {
+  if (m.kind === 'data') return m.type + ' ' + m.name + initializer(m) + ';';
+  if (m.kind === 'constructor') {
+    var prefix = m.parameters.length === 1 ? 'explicit ' : '';
+    return prefix + m.name + '(' + m.parameters.join(', ') + ');';
+  }
+  return m.returnType + ' ' + m.name + '(' + m.parameters.join(', ') + ')' + (m.isConst ? ' const' : '') + (m.isNoexcept ? ' noexcept' : '') + ';';
+}
+function initializer(m) {
+  if (m.value === undefined || m.value === '') return '';
+  if (m.type === 'std::string') return '';
+  return ' = ' + m.value;
+}
+function classImpl(cls, base) {
+  var out = '#include "' + cls.name + '.h"\n';
+  if (cls.members.some(function(m){ return m.parameters.join(' ').includes('string'); })) out += '#include <utility>\n';
+  out += '\n';
+  var ctor = cls.members.find(function(m) { return m.kind === 'constructor'; });
+  if (ctor) {
+    out += cls.name + '::' + cls.name + '(' + ctor.parameters.join(', ') + ')';
+    var inits = [];
+    if (base) inits.push(base.name + '(' + baseCtorForwardArgs().join(', ') + ')');
+    cls.members.filter(function(m){ return m.kind === 'data'; }).forEach(function(m) {
+      var p = cleanParam(m.name);
+      if (ctor.parameters.map(paramName).indexOf(p) >= 0) {
+        inits.push(m.name + '(' + p + ')');
+      }
+    });
+    if (inits.length) out += '\n    : ' + inits.join(',\n      ');
+    out += ' {\n}\n\n';
+  }
+  cls.members.filter(function(m){ return m.kind === 'function'; }).forEach(function(m) {
+    out += m.returnType + ' ' + cls.name + '::' + m.name + '(' + m.parameters.join(', ') + ')' + (m.isConst ? ' const' : '') + (m.isNoexcept ? ' noexcept' : '') + ' {\n';
+    out += functionBody(m, cls);
+    out += '}\n\n';
+  });
+  return out;
+}
+function cleanParam(name) {
+  return name.replace(/_+$/, '') || 'value';
+}
+function valueForType(type) {
+  if (type === 'std::string') return '""';
+  if (type === 'bool') return 'false';
+  if (type === 'double') return '0.0';
+  return '0';
+}
+function functionBody(m, cls) {
+  var dataMember = cls.members.find(function(x) { return x.kind === 'data' && cleanParam(x.name).toLowerCase().includes(m.name.replace(/^get|^is|^set/, '').toLowerCase().slice(0, 4)); });
+  if (m.name.startsWith('get') || m.name.startsWith('is')) {
+    dataMember = dataMember || cls.members.find(function(x){ return x.kind === 'data'; });
+    return dataMember ? '    return ' + dataMember.name + ';\n' : '    return {};\n';
+  }
+  if (m.name.startsWith('set')) {
+    dataMember = dataMember || cls.members.find(function(x){ return x.kind === 'data'; });
+    var param = m.parameters[0] ? m.parameters[0].split(' ').pop() : 'value';
+    return dataMember ? '    ' + dataMember.name + ' = ' + param + ';\n' : '    (void)' + param + ';\n';
+  }
+  if (m.returnType === 'void') return '    // Add behavior here.\n';
+  return '    return {};\n';
+}
+function mainFile() {
+  return '#include "' + state.derivedClass.name + '.h"\n\nint main() {\n    ' +
+    state.derivedClass.name + ' ' + (state.objectName || 'object') + '(' + (state.derivedValueArgs || '') + ');\n    return 0;\n}\n';
+}
+function renderChallenges() {
+  var b = state.baseClass.name;
+  var d = state.derivedClass.name;
+  byId('composition').innerHTML = '<strong>Inheritance vs. composition:</strong><br>A ' + esc(d) + ' is a ' + esc(b) + '. -> inheritance<br>A ' + esc(b) + ' has a helper object. -> composition';
+  var privateBase = state.baseClass.members.find(function(m){ return m.kind === 'data' && m.access === 'private'; }) || state.baseClass.members.find(function(m){ return m.kind === 'data'; });
+  var publicBase = state.baseClass.members.find(function(m){ return m.kind === 'function' && m.access === 'public'; });
+  var qs = [
+    { q: 'Can ' + d + '::example() directly assign to ' + b + '::' + privateBase.name + '?', choices: ['No', 'Yes'], answer: 'No', why: privateBase.name + ' is private in ' + b + '. It exists, but the derived class cannot access it directly.' },
+    { q: 'Can main() call ' + (state.objectName || 'object') + '.' + (publicBase ? publicBase.displayName : 'getName()') + ' with ' + state.inheritanceType + ' inheritance?', choices: ['Yes', 'No'], answer: state.inheritanceType === 'public' ? 'Yes' : 'No', why: 'Inherited public members are public only through public inheritance. Protected and private inheritance hide that interface from main().' },
+    { q: 'Which constructor runs first when a ' + d + ' object is created?', choices: [b, d, 'They run simultaneously'], answer: b, why: 'The base constructor runs first so the base-class subobject is valid before the derived part initializes.' },
+    { q: 'Which destructor runs first when a ' + d + ' object leaves scope?', choices: [d, b, 'They run simultaneously'], answer: d, why: 'Destruction reverses construction order: derived first, then base.' },
+    { q: 'A ' + b + ' contains a Weapon. Should Weapon normally be a base class of ' + b + '?', choices: ['No', 'Yes'], answer: 'No', why: 'That is a has-a relationship, so composition is normally more appropriate.' },
+    { q: 'With protected inheritance, what happens to a public member inherited from the base class?', choices: ['It becomes protected', 'It stays public', 'It disappears'], answer: 'It becomes protected', why: 'Protected inheritance converts inherited public and protected members to protected access in the derived class.' }
+  ];
+  byId('challenges').innerHTML = qs.map(function(q, qi) {
+    return '<div class="class-card"><h3>Challenge ' + (qi + 1) + '</h3><div class="panel-body"><p>' + esc(q.q) + '</p><div class="choice-row">' +
+      q.choices.map(function(c) { return '<button type="button" data-challenge="' + qi + '" data-answer="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') +
+      '</div><p id="challenge-result-' + qi + '" class="subtle" aria-live="polite">' + esc(q.why) + '</p></div></div>';
+  }).join('');
+  state.challengeData = qs;
+}
+function highlight(src) {
+  return src.split('\n').map(highlightLine).join('\n');
+}
+function highlightLine(line) {
+  if (/^\s*#/.test(line)) return '<span class="pp">' + esc(line) + '</span>';
+  var commentAt = line.indexOf('//');
+  var codePart = commentAt >= 0 ? line.slice(0, commentAt) : line;
+  var commentPart = commentAt >= 0 ? line.slice(commentAt) : '';
+  var pattern = /"([^"\\]|\\.)*"|\b(std::string|string)\b|\b(class|public|protected|private|return|const|explicit|int|void|bool|double|noexcept|if|else|true|false)\b|\b([A-Z][A-Za-z0-9_]*)\b|\b(\d+(?:\.\d+)?)\b/g;
+  var out = '';
+  var last = 0;
+  codePart.replace(pattern, function(match, strBody, typeWord, keyword, className, number, offset) {
+    out += esc(codePart.slice(last, offset));
+    var cls = strBody !== undefined ? 'st' : typeWord ? 'ty' : keyword ? 'kw' : className ? 'ty' : 'num';
+    out += '<span class="' + cls + '">' + esc(match) + '</span>';
+    last = offset + match.length;
+    return match;
+  });
+  out += esc(codePart.slice(last));
+  if (commentPart) out += '<span class="cm">' + esc(commentPart) + '</span>';
+  return out;
+}
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise(function(resolve, reject) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); resolve(); }
+    catch (e) { reject(e); }
+    document.body.removeChild(ta);
+  });
+}
+function byId(id) { return document.getElementById(id); }
+function setValue(id, value) { if (byId(id).value !== value) byId(id).value = value; }
+function setChecked(id, value) { byId(id).checked = !!value; }
+function stopTimer() {
+  if (timer) clearInterval(timer);
+  timer = null;
+  byId('autoPlay') && (byId('autoPlay').textContent = 'Auto Play');
+}
+function wireEvents() {
+  byId('preset').addEventListener('change', function(e) {
+    initFromPreset(e.target.value);
+    render();
+  });
+  byId('mode').addEventListener('change', function(e) { state.mode = e.target.value; render(); });
+  byId('inheritance').addEventListener('change', function(e) { state.inheritanceType = e.target.value; state.accessRevealed = false; render(); });
+  byId('advanced').addEventListener('change', function(e) { state.showAdvanced = e.target.checked; render(); });
+  byId('showCode').addEventListener('change', function(e) { state.showCode = e.target.checked; render(); });
+  byId('resetPreset').addEventListener('click', function() { initFromPreset(state.preset); render(); });
+  byId('baseName').addEventListener('input', function(e) { state.baseClass.name = e.target.value.trim(); state.preset = 'custom'; render(); });
+  byId('derivedName').addEventListener('input', function(e) { state.derivedClass.name = e.target.value.trim(); state.preset = 'custom'; render(); });
+  byId('isaCheck').addEventListener('change', function(e) { state.isaAnswer = e.target.value; renderHierarchy(); });
+  byId('accessContext').addEventListener('change', function(e) { state.accessContext = e.target.value; state.accessRevealed = false; renderAccessChecker(false); });
+  byId('memberSelect').addEventListener('change', function(e) { state.selectedMember = e.target.value; state.accessRevealed = false; render(); });
+  byId('checkAccess').addEventListener('click', function() { state.accessRevealed = true; renderAccessChecker(true); });
+  ['showPrivate', 'showInheritedFns', 'showOwnership', 'showValues'].forEach(function(id) {
+    byId(id).addEventListener('change', function(e) { state[id] = e.target.checked; renderObject(); });
+  });
+  byId('constructBtn').addEventListener('click', function() { state.timelineMode = 'construct'; state.timelineStep = 0; stopTimer(); renderTimeline(); });
+  byId('destroyBtn').addEventListener('click', function() { state.timelineMode = 'destroy'; state.timelineStep = 0; stopTimer(); renderTimeline(); });
+  byId('stepBack').addEventListener('click', function() { state.timelineStep = Math.max(0, state.timelineStep - 1); renderTimeline(); });
+  byId('stepForward').addEventListener('click', function() { state.timelineStep = Math.min(timelineSteps().length - 1, state.timelineStep + 1); renderTimeline(); });
+  byId('timelineReset').addEventListener('click', function() { state.timelineStep = 0; stopTimer(); renderTimeline(); });
+  byId('autoPlay').addEventListener('click', function() {
+    if (timer) { stopTimer(); return; }
+    byId('autoPlay').textContent = 'Pause';
+    timer = setInterval(function() {
+      if (state.timelineStep >= timelineSteps().length - 1) { stopTimer(); return; }
+      state.timelineStep++;
+      renderTimeline();
+    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1400 : 900);
+  });
+  byId('guidedPrev').addEventListener('click', function() { state.guidedStep = Math.max(0, state.guidedStep - 1); renderGuided(); });
+  byId('guidedNext').addEventListener('click', function() { state.guidedStep = Math.min(6, state.guidedStep + 1); renderGuided(); });
+  byId('copyFile').addEventListener('click', function() {
+    var f = generatedFiles()[state.activeCodeFile];
+    copyText(f.content).then(function(){ byId('copyStatus').textContent = 'Copied ' + f.name; }, function(){ byId('copyStatus').textContent = 'Copy failed'; });
+  });
+  byId('copyAll').addEventListener('click', function() {
+    var text = generatedFiles().map(function(f){ return '// ' + f.name + '\n' + f.content; }).join('\n');
+    copyText(text).then(function(){ byId('copyStatus').textContent = 'Copied all files'; }, function(){ byId('copyStatus').textContent = 'Copy failed'; });
+  });
+  byId('resetCode').addEventListener('click', function() { state.activeCodeFile = 0; renderCode(); byId('copyStatus').textContent = 'Ready'; });
+  document.addEventListener('click', function(e) {
+    var memberBtn = e.target.closest('[data-member]');
+    if (memberBtn) {
+      state.selectedMember = memberBtn.dataset.member;
+      state.accessRevealed = false;
+      render();
+      return;
+    }
+    var tab = e.target.closest('[data-code-tab]');
+    if (tab) {
+      state.activeCodeFile = Number(tab.dataset.codeTab);
+      renderCode();
+      return;
+    }
+    var add = e.target.closest('[data-add]');
+    if (add) {
+      addMember(add.dataset.add);
+      render();
+      syncEditorSelects();
+      return;
+    }
+    var remove = e.target.closest('[data-remove]');
+    if (remove) {
+      removeMember(remove.dataset.remove);
+      render();
+      syncEditorSelects();
+      return;
+    }
+    var challenge = e.target.closest('[data-challenge]');
+    if (challenge) {
+      var q = state.challengeData[Number(challenge.dataset.challenge)];
+      var ok = challenge.dataset.answer === q.answer;
+      byId('challenge-result-' + challenge.dataset.challenge).innerHTML = '<span class="tag ' + (ok ? 'ok' : 'bad') + '">' + (ok ? 'Correct' : 'Try again') + '</span> ' + esc(q.why);
+    }
+  });
+  document.addEventListener('input', function(e) {
+    var row = e.target.closest('[data-edit]');
+    if (!row) return;
+    var m = allMembers(true).find(function(x) { return x.id === row.dataset.edit; });
+    if (!m) return;
+    var field = e.target.dataset.field;
+    if (field === 'name') {
+      m.name = e.target.value.trim();
+      m.displayName = m.kind === 'data' ? m.name : m.name + '()';
+    }
+    if (field === 'type') {
+      if (m.kind === 'data') m.type = e.target.value.trim();
+      else m.returnType = e.target.value.trim();
+    }
+    state.preset = 'custom';
+    render();
+    syncEditorSelects();
+  });
+  document.addEventListener('change', function(e) {
+    var row = e.target.closest('[data-edit]');
+    if (!row) return;
+    var m = allMembers(true).find(function(x) { return x.id === row.dataset.edit; });
+    if (!m) return;
+    var field = e.target.dataset.field;
+    if (field === 'access') m.access = e.target.value;
+    if (field === 'kind') {
+      m.kind = e.target.value;
+      if (m.kind === 'function') {
+        m.returnType = m.returnType || m.type || 'void';
+        m.parameters = [];
+        m.displayName = m.name + '()';
+      } else {
+        m.type = m.type || m.returnType || 'int';
+        m.value = m.value || valueForType(m.type);
+        m.displayName = m.name;
+      }
+    }
+    state.preset = 'custom';
+    render();
+    syncEditorSelects();
+  });
+}
+function addMember(role) {
+  var cls = role === 'base' ? state.baseClass : state.derivedClass;
+  if (cls.members.filter(function(m){ return m.kind !== 'constructor'; }).length >= 8) return;
+  var id = role + '-' + Date.now();
+  cls.members.push(data(id, role + 'Member_', 'int', 'private', '0'));
+  state.selectedMember = id;
+  state.preset = 'custom';
+}
+function removeMember(id) {
+  [state.baseClass, state.derivedClass].forEach(function(cls) {
+    cls.members = cls.members.filter(function(m) { return m.id !== id || m.kind === 'constructor'; });
+  });
+  state.selectedMember = firstSelectable().id;
+  state.preset = 'custom';
+}
+function applyQuery() {
+  var q = new URLSearchParams(location.search);
+  var preset = q.get('preset');
+  initFromPreset(preset && presets[preset] ? preset : 'character');
+  var inheritance = q.get('inheritance');
+  if (accessOrder.includes(inheritance)) state.inheritanceType = inheritance;
+  var mode = q.get('mode');
+  if (mode === 'guided' || mode === 'explore') state.mode = mode;
+  var panel = q.get('panel');
+  if (panel) {
+    var map = { hierarchy: 'hierarchyPanel', object: 'objectPanel', access: 'accessPanel', constructors: 'constructorPanel', code: 'codePanel', challenge: 'challengePanel' };
+    setTimeout(function() {
+      var el = byId(map[panel]);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+}
+
+applyQuery();
+wireEvents();
+render();
+syncEditorSelects();
+</script>
+</body>
+</html>

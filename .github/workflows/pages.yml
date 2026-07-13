@@ -28,7 +28,8 @@ jobs:
         run: |
           $requiredFiles = @(
             "index.html",
-            "visualizers/recursion-explorer.html"
+            "visualizers/recursion-explorer.html",
+            "visualizers/inheritance-explorer.html"
           )
 
           foreach ($file in $requiredFiles) {
@@ -40,6 +41,10 @@ jobs:
           $index = Get-Content "index.html" -Raw
           if ($index -notmatch "visualizers/recursion-explorer\.html") {
             throw "index.html does not link to the recursion visualizer."
+          }
+
+          if ($index -notmatch "visualizers/inheritance-explorer\.html") {
+            throw "index.html does not link to the inheritance visualizer."
           }
 
   deploy:
