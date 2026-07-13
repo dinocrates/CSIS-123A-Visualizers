@@ -49,7 +49,7 @@
     overflow: hidden;
   }
 
-  /* classic Mac pinstriped title bar, close box on the left */
+  /* classic Mac pinstriped title bar with traffic-light controls */
   .title-bar {
     background: repeating-linear-gradient(180deg, var(--sky) 0 2px, #fff 2px 5px);
     display: flex; align-items: center;
@@ -63,12 +63,27 @@
   .title-bar-text span {
     background: #fff; padding: 1px 14px; border-radius: 8px; display: inline-block;
   }
-  .title-btn {
-    width: 15px; height: 15px; flex-shrink: 0;
-    background: #fff; border: 1.5px solid var(--ink-soft);
-    border-radius: 5px; cursor: pointer;
+  .window-controls,
+  .title-spacer {
+    width: 52px;
+    flex-shrink: 0;
   }
-  .title-btn:hover { background: var(--sky); }
+  .window-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .window-dot {
+    width: 12px;
+    height: 12px;
+    border: 1px solid rgba(76, 85, 112, 0.32);
+    border-radius: 50%;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+  }
+  .window-dot.red { background: #ff6b67; }
+  .window-dot.yellow { background: #ffd166; }
+  .window-dot.green { background: #63d471; }
+  .title-bar:hover .window-dot { filter: saturate(1.1) brightness(1.02); }
 
   /* tab bar */
   .tabbar {
@@ -250,9 +265,13 @@
 <body>
 <div class="window">
   <div class="title-bar">
-    <div class="title-btn"></div>
+    <div class="window-controls" aria-hidden="true">
+      <span class="window-dot red"></span>
+      <span class="window-dot yellow"></span>
+      <span class="window-dot green"></span>
+    </div>
     <div class="title-bar-text"><span>&#10047; Recursion Explorer &#10047;</span></div>
-    <div class="title-btn"></div>
+    <div class="title-spacer" aria-hidden="true"></div>
   </div>
 
   <div class="tabbar" id="tabbar"></div>
