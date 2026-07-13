@@ -299,20 +299,22 @@ var TOOLS = [
     ],
   },
   {
-    unit: 'UNIT 13 - INHERITANCE',
+    unit: 'UNIT 13 — INHERITANCE',
     title: 'C++ Inheritance Explorer',
     file: 'visualizers/inheritance-explorer.html',
     embedHeight: 1200,
-    desc: 'A dashboard-style visualizer for single inheritance in C++17. ' +
-          'Switch among Character/Warrior, Sensor/TemperatureSensor, Person/Student, ' +
-          'or a custom hierarchy to see how inheritance mode affects object layout, ' +
-          'member access, constructors, destructors, and generated code.',
+    desc: 'A visual dashboard for single inheritance in C++17. A live UML diagram shows ' +
+          'how each inheritance mode rewrites the effective access of inherited members, ' +
+          'an animated object builds itself base-first (and tears down derived-first), and ' +
+          'an access checker lights up the path from any context to any member — green if ' +
+          'it compiles, red if it does not. Includes presets, a custom class editor, and ' +
+          'generated multi-file code.',
     demos: [
       { sig: 'Character -> Warrior',         what: 'base and derived classes with private base data' },
       { sig: 'Sensor -> TemperatureSensor',  what: 'public interface inherited through a derived sensor' },
       { sig: 'Person -> Student',            what: 'protected data and beginner-friendly class structure' },
-      { sig: 'public/protected/private',     what: 'compare inheritance modes and access changes' },
-      { sig: 'constructor/destructor order', what: 'base-first construction, derived-first destruction' },
+      { sig: 'public/protected/private',     what: 'UML diagram recolors as effective access changes' },
+      { sig: 'constructor/destructor order', what: 'animated build: base-first up, derived-first down' },
     ],
   },
 ];

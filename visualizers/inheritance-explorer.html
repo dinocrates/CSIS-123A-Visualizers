@@ -105,7 +105,7 @@
   }
   .toolbar {
     display: grid;
-    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 10px;
     padding: 12px;
     border-bottom: 1px solid var(--line);
@@ -116,6 +116,7 @@
     gap: 4px;
     font-weight: 700;
     color: #333;
+    min-width: 0;
   }
   .check-label {
     display: flex;
@@ -131,6 +132,8 @@
     min-height: 36px;
     padding: 6px 8px;
     background: #fff;
+    width: 100%;
+    min-width: 0;
   }
   button {
     min-height: 36px;
@@ -641,7 +644,7 @@
   }
   .hidden { display: none !important; }
   @media (max-width: 980px) {
-    .toolbar, .grid {
+    .grid {
       grid-template-columns: 1fr;
     }
     .mini-grid {
